@@ -5,8 +5,8 @@ authors = ["Lars Kroll <lkroll@kth.se>"]
 edition = "2018"
 
 [dependencies]
-kompact 				= { git = "https://github.com/kompics/kompact"}
-#kompact 				= { path = "../../kompics-rust/core/" }
+#kompact 				= { git = "https://github.com/kompics/kompact"}
+kompact 				= { path = "../../kompact/core/" }
 #kompact 				= "0.8"
 benchmark_suite_shared 	= { path = "../shared_rust/" }
 protobuf        		= "2"
@@ -16,14 +16,14 @@ grpc 					= "0.6"
 synchronoise 			= "0.4"
 slog 					= {version = "2.4", features = ["max_level_debug", "release_max_level_info"]}
 time 					= "0.1"
-tokio-core 				= "0.1"
+#tokio-core 				= "0.1"
 num_cpus 				= "1"
 parse_duration 			= "2"
 rand 					= {version = "0.7", features = ["small_rng"]}
 chrono                  = "0.4"
 
 [dev-dependencies]
-uuid = { version = "0.7", features = ["v4"] }
+uuid = { version = "0.8", features = ["v4"] }
 
 [features]
 travis_ci = ["slog/max_level_info", "slog/release_max_level_info"]
