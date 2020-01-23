@@ -534,7 +534,7 @@ pub mod actor_atomicregister {
                     self.new_iteration(&init);
                         self.nodes = Some(init.nodes);
                         let init_ack = InitAck(self.current_run_id);
-                        sender.tell_pooled((init_ack, PARTITIONING_ACTOR_SER), self);
+                        sender.tell_pooled(SerialisableValue{v: init_ack, ser: PARTITIONING_ACTOR_SER}, self);
                         self.master = Some(sender);
                 },
                 _run: Run [PartitioningActorSer] => {
