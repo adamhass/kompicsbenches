@@ -4,7 +4,9 @@ organization in ThisBuild := "se.kth.benchmarks"
 
 version in ThisBuild := "0.3.0-SNAPSHOT"
 
-scalaVersion in ThisBuild := "2.12.9"
+scalaVersion in ThisBuild := "2.12.10"
+
+//crossScalaVersions in ThisBuild := List("2.12.10", "2.13.1")
 
 resolvers += Resolver.mavenLocal
 resolvers += Resolver.bintrayRepo("lkrollcom", "maven")

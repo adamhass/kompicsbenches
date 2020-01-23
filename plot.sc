@@ -13,7 +13,7 @@ import ammonite.ops.ImplicitWd._
 //import $ivy.`com.lihaoyi::scalatags:0.6.2`, scalatags.Text.all._
 //import $ivy.`org.sameersingh::scalaplot:0.0.4`, org.sameersingh.scalaplot.Implicits._
 import $ivy.`com.panayotis.javaplot:javaplot:0.5.0`, com.panayotis.gnuplot.{plot => gplot, utils => gutils, _}
-import $ivy.`com.github.tototoshi::scala-csv:1.3.5`, com.github.tototoshi.csv._
+import $ivy.`com.github.tototoshi::scala-csv:1.3.6`, com.github.tototoshi.csv._
 import $file.build
 import java.io.File
 import $file.benchmarks, benchmarks.{BenchmarkImpl, implementations}

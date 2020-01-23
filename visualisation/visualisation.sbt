@@ -3,7 +3,8 @@ val commonSettings = Seq(
   version := "1.0.0-SNAPSHOT",
   scalaVersion := "2.12.10",
   scalacOptions ++= Seq("-deprecation", "-feature"),
-  resolvers += Resolver.mavenLocal
+  resolvers += Resolver.mavenLocal,
+  resolvers += Resolver.bintrayRepo("lkrollcom","maven")
 );
 
 lazy val root = (project in file("."))
