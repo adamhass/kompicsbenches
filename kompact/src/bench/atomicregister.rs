@@ -516,6 +516,7 @@ pub mod actor_atomicregister {
     impl Provide<ControlPort> for AtomicRegisterActor {
         fn handle(&mut self, _event: ControlEvent) -> () {
             // ignore
+            self.ctx_mut().initialize_pool();
         }
     }
 

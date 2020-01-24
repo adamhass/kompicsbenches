@@ -16,11 +16,13 @@ class BenchmarkRunnerServer(port: Int, executionContext: ExecutionContext, runne
   private[this] var server: Server = null;
 
   private[benchmarks] def start(): Unit = {
-    import util.retry.blocking.{Failure, Retry, RetryStrategy, Success}
+    //import util.retry.blocking.{Failure, Retry, RetryStrategy, Success}
+    //implicit val retryStrategy = RetryStrategy.fixedBackOff(retryDuration = 500.milliseconds, maxAttempts = 10);
 
-    implicit val retryStrategy = RetryStrategy.fixedBackOff(retryDuration = 500.milliseconds, maxAttempts = 10);
+    import com.github.takezoe.retry._
+    implicit val config = RetryConfig(maxAttempts = 10, retryDuration = 500.milliseconds, backOff = FixedBackOff);
 
-    server = Retry {
+    server = retryBlockingAsTry {
       ServerBuilder
         .forPort(port)
         .addService(BenchmarkRunnerGrpc.bindService(runner, executionContext))

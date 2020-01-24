@@ -33,6 +33,7 @@ class BenchmarkClient(val address: String, val masterAddress: String, val master
 
   private object ClientService extends BenchmarkClientGrpc.BenchmarkClient {
     override def setup(request: SetupConfig): Future[SetupResponse] = {
+      import scala.language.postfixOps
       if (state() == StateType.CheckingIn) {
         state := StateType.Ready; // Clearly Check-In succeeded, even if the RPC was faulty
       }
@@ -116,11 +117,13 @@ class BenchmarkClient(val address: String, val masterAddress: String, val master
   private[this] var checkInAttempts: Int = 0;
 
   private[benchmarks] def start(): Unit = {
-    import util.retry.blocking.{Failure, Retry, RetryStrategy, Success}
+    //import util.retry.blocking.{Failure, Retry, RetryStrategy, Success}
+    //implicit val retryStrategy = RetryStrategy.fixedBackOff(retryDuration = 500.milliseconds, maxAttempts = 10);
 
-    implicit val retryStrategy = RetryStrategy.fixedBackOff(retryDuration = 500.milliseconds, maxAttempts = 10);
+    import com.github.takezoe.retry._
+    implicit val config = RetryConfig(maxAttempts = 10, retryDuration = 500.milliseconds, backOff = FixedBackOff);
 
-    server = Retry {
+    server = retryBlockingAsTry {
       ServerBuilder
         .forPort(0)
         .addService(BenchmarkClientGrpc.bindService(ClientService, serverPool))

@@ -167,11 +167,12 @@ class BenchmarkMaster(val runnerPort: Int, val masterPort: Int, val waitFor: Int
   private[this] var runnerServer: Server = null;
 
   private[benchmarks] def start(): Unit = {
-    import util.retry.blocking.{Failure, Retry, RetryStrategy, Success}
+    //import util.retry.blocking.{Failure, Retry, RetryStrategy, Success}
+    //implicit val retryStrategy = RetryStrategy.fixedBackOff(retryDuration = 500.milliseconds, maxAttempts = 10);
+    import com.github.takezoe.retry._
+    implicit val config = RetryConfig(maxAttempts = 10, retryDuration = 500.milliseconds, backOff = FixedBackOff);
 
-    implicit val retryStrategy = RetryStrategy.fixedBackOff(retryDuration = 500.milliseconds, maxAttempts = 10);
-
-    masterServer = Retry {
+    masterServer = retryBlockingAsTry {
       ServerBuilder
         .forPort(masterPort)
         .addService(BenchmarkMasterGrpc.bindService(MasterService, serverPool))
@@ -188,7 +189,7 @@ class BenchmarkMaster(val runnerPort: Int, val masterPort: Int, val waitFor: Int
       }
     };
 
-    runnerServer = Retry {
+    runnerServer = retryBlockingAsTry {
       ServerBuilder
         .forPort(runnerPort)
         .addService(BenchmarkRunnerGrpc.bindService(RunnerService, serverPool))
