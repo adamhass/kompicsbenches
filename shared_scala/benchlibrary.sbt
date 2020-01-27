@@ -2,7 +2,7 @@ name := "Benchmark Suite Shared"
 
 organization in ThisBuild := "se.kth.benchmarks"
 
-version in ThisBuild := "1.0.0-SNAPSHOT"
+version in ThisBuild := "1.0.0"
 
 scalaVersion in ThisBuild := "2.13.1"
 

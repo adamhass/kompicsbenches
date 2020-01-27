@@ -1,6 +1,6 @@
 val commonSettings = Seq(
   organization := "se.kth.benchmarks",
-  version := "1.0.0-SNAPSHOT",
+  version := "1.0.0",
   scalaVersion := "2.12.10",
   scalacOptions ++= Seq("-deprecation", "-feature"),
   resolvers += Resolver.mavenLocal,
