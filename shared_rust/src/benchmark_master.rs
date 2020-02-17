@@ -21,6 +21,8 @@ use std::{
     time::Duration,
 };
 
+// ./bench.sc fakeRemote --impls KOMPACTAC
+
 pub fn run(
     runner_port: u16,
     master_port: u16,
@@ -52,22 +54,30 @@ pub fn run(
         match std::net::TcpListener::bind(master_address.clone()) {
             // FIXME workaround for httbis panic on bound socket in 0.7.0
             Ok(l) => {
+                info!(logger, "MasterServer listener...");
                 drop(l);
                 let mut serverb = grpc::ServerBuilder::new_plain();
                 let res: OperationResult<grpc::Server, String> =
                     match serverb.http.set_addr(master_address.clone()) {
                         Ok(_) => {
+                            info!(logger, "MasterServer http.set_addr => Ok(_)");
                             let service_def =
                                 distributed_grpc::BenchmarkMasterServer::new_service_def(
                                     master_handler,
                                 );
                             serverb.add_service(service_def);
                             match serverb.build() {
-                                Ok(server) => OperationResult::Ok(server),
-                                Err(e) => OperationResult::Retry(format!(
-                                    "Could not start master on {}: {}.",
-                                    master_address, e
-                                )),
+                                Ok(server) => {
+                                    info!(logger, "OperationResult::Ok(server)!!");
+                                    OperationResult::Ok(server)
+                                },
+                                Err(e) => {
+                                    info!(logger, "Error! {:?}", &e);
+                                    OperationResult::Retry(format!(
+                                        "Could not start master on {}: {}.",
+                                        master_address, e
+                                    ))
+                                },
                             }
                         },
                         Err(e) => OperationResult::Err(format!(
@@ -106,28 +116,43 @@ pub fn run(
                     .set_addr(runner_address.clone())
                 {
                     Ok(_) => {
+                        info!(logger, "runner_server serverb.http.set_addr => Ok(_), state: {:?}", runner_handler.state.get());
                         let service_def =
                             benchmarks_grpc::BenchmarkRunnerServer::new_service_def(runner_handler);
                         serverb.add_service(service_def);
                         match serverb.build() {
-                            Ok(server) => OperationResult::Ok(server),
-                            Err(e) => OperationResult::Retry(format!(
-                                "Could not start runner on {}: {}.",
-                                runner_address, e
-                            )),
+                            Ok(server) => {
+                                println!("bullshit1");
+                                info!(logger, "serverb.build Ok(server)");
+                                OperationResult::Ok(server)
+                            },
+                            Err(e) => {
+                                println!("bullshit2");
+                                info!(logger, "serverb.build Err({:?})", e);
+                                OperationResult::Retry(format!(
+                                    "Could not start runner on {}: {}.",
+                                    runner_address, e
+                                ))
+                            },
                         }
                     },
-                    Err(e) => OperationResult::Err(format!(
-                        "Could not read runner address {}: {}",
-                        runner_address, e
-                    )),
+                    Err(e) => {
+                        println!("bullshit3");
+                        OperationResult::Err(format!(
+                            "Could not read runner address {}: {}",
+                            runner_address, e
+                        ))
+                    },
                 };
                 res
             },
-            Err(e) => OperationResult::Retry(format!(
-                "Could not bind to runner address {}: {}",
-                runner_address, e
-            )),
+            Err(e) => {
+                println!("bullshit4");
+                OperationResult::Retry(format!(
+                    "Could not bind to runner address {}: {}",
+                    runner_address, e
+                ))
+            },
         }
     });
 
@@ -265,24 +290,39 @@ impl BenchmarkMaster {
     fn state(&self) -> StateHolder { self.state.clone() }
 
     fn start(&mut self) -> () {
-        info!(self.logger, "Starting...");
+        info!(self.logger, "Starting master...");
         while self.state.get() == State::INIT {
-            let ci = self.check_in_queue.recv().expect("Queue to MasterHandler broke!");
-            self.check_in_handler(ci);
+            info!(self.logger, "State::INIT, trying to recv!");
+            //let ci = self.check_in_queue.recv().expect("Queue to MasterHandler broke!");
+            match self.check_in_queue.recv() {
+                Err(e) => {
+                    info!(self.logger, "Error receiving on check_in_queue: {:?}", e);
+                }
+                Ok(ci) => {
+                    info!(self.logger, "self.check_in_handler");
+                    self.check_in_handler(ci);
+                }
+            }
         }
+        info!(self.logger, "DeploymentMetaData...");
         self.meta = DeploymentMetaData::new(
             self.clients.len().try_into().expect("Too many clients to fit metadata!"),
         );
+        info!(self.logger, "Entering loop!");
         loop {
+            info!(self.logger, "Looping");
             match self.state.get() {
                 State::READY => {
+                    info!(self.logger, "State ready in loop");
                     debug!(self.logger, "Awaiting benchmark request");
                     let bench = self.bench_queue.recv().expect("Queue to RunnerHandler broke!");
                     match bench {
                         BenchRequest::Invoke { promise, invocation } => {
+                            info!(self.logger, "BenchRequest::Invoke!");
                             self.bench_request_handler(promise, invocation)
                         },
                         BenchRequest::Shutdown(force) => {
+                            info!(self.logger, "BenchRequest::Shutdown!");
                             let mut sreq = messages::ShutdownRequest::new();
                             sreq.set_force(force);
                             info!(
@@ -306,11 +346,13 @@ impl BenchmarkMaster {
                     }
                 },
                 State::STOPPED => {
+                    info!(self.logger, "State Stopped in loop");
                     info!(self.logger, "Master stopped!");
                     thread::sleep(Duration::from_millis(500)); // give it a bit of grace time
                     return;
                 },
                 s => {
+                    info!(self.logger, "State in loop: {:?}", s);
                     debug!(self.logger, "Master waiting in state={:?}", s);
                     thread::sleep(Duration::from_millis(500));
                 },
@@ -389,8 +431,9 @@ impl BenchmarkMaster {
         msg: Box<dyn ::protobuf::Message + UnwindSafe>,
     ) -> impl Future<Item = messages::TestResult, Error = BenchmarkError>
     {
-        self.state.cas(State::READY, State::RUN).expect("Wasn't ready to run!");
         let blogger = self.logger.new(o!("benchmark" => b.label()));
+        info!(blogger, "run_local_benchmark");
+        self.state.cas(State::READY, State::RUN).expect("Wasn't ready to run!");
         info!(blogger, "Starting local test {}", b.label());
         let f = run_async(move || b.run(msg).into());
         let state_copy = self.state.clone();
@@ -408,6 +451,7 @@ impl BenchmarkMaster {
     ) -> impl Future<Item = messages::TestResult, Error = BenchmarkError>
     {
         let blogger = self.logger.new(o!("benchmark" => b.label()));
+        info!(blogger, "run_distributed_benchmark");
         let state_copy = self.state.clone();
         let state_copy2 = self.state.clone();
         let clients_copy1 = self.clients.clone();
@@ -511,6 +555,7 @@ impl distributed_grpc::BenchmarkMaster for MasterHandler {
         p: distributed::ClientInfo,
     ) -> ::grpc::SingleResponse<distributed::CheckinResponse>
     {
+        info!(self.logger, "MasterHandler::check_in, self.state: {:?}", self.state.get());
         if self.state.get() == State::INIT {
             info!(self.logger, "Got Check-In from {}:{}", p.get_address(), p.get_port(),);
             self.check_in_queue.send(p).unwrap();
@@ -544,6 +589,7 @@ impl RunnerHandler {
         inv: BenchInvocation,
     ) -> impl Future<Item = messages::TestResult, Error = grpc::Error>
     {
+        info!(self.logger, "RunnerHandler::enqeue");
         let (promise, future) = oneshot::channel::<messages::TestResult>();
         let req = BenchRequest::new(inv, promise);
         match self.bench_queue.send(req) {
@@ -564,6 +610,7 @@ impl RunnerHandler {
     where
         F: FnOnce(B) -> BenchInvocation,
     {
+        info!(self.logger, "RunnerHandler::enqeue_if_implemented");
         match res {
             Ok(b) => {
                 let br = f(b);
@@ -587,12 +634,14 @@ impl benchmarks_grpc::BenchmarkRunner for RunnerHandler {
         _p: messages::ReadyRequest,
     ) -> grpc::SingleResponse<messages::ReadyResponse>
     {
-        info!(self.logger, "Got ready? req.");
+        info!(self.logger, "Got ready?!! req.");
         let mut msg = messages::ReadyResponse::new();
         if self.state.get() == State::READY {
             msg.set_status(true);
+            info!(self.logger, "Got ready? replying with true");
         } else {
             msg.set_status(false);
+            info!(self.logger, "Not ready: {:?}", self.state.get());
         }
         grpc::SingleResponse::completed(msg)
     }

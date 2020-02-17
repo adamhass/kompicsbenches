@@ -28,6 +28,7 @@ pub fn run(
     logger: Logger,
 ) -> ()
 {
+    info!(logger, "benchmark_client::run()");
     let (command_sender, command_receiver) = cbchannel::unbounded();
     let mut inst = BenchmarkClient::new(
         logger.new(
@@ -137,6 +138,7 @@ impl BenchmarkClient {
         command_queue: cbchannel::Receiver<ClientCommand>,
     ) -> BenchmarkClient
     {
+        info!(logger, "Creating a new benchmark Client");
         BenchmarkClient {
             logger,
             state: StateHolder::init(),
@@ -154,7 +156,7 @@ impl BenchmarkClient {
     fn state(&self) -> StateHolder { self.state.clone() }
 
     fn start(&mut self) -> () {
-        info!(self.logger, "Starting...");
+        info!(self.logger, "Starting benchmark_client...");
         while self.state.matches(State::CheckingIn) {
             let f = self.checkin();
             match f.wait() {
@@ -177,12 +179,14 @@ impl BenchmarkClient {
         }
         loop {
             if self.state.matches(State::Stopped) {
+                info!(self.logger, "benchmark_client State::Stopped!");
                 return;
             }
             let cmd = self.command_queue.recv().expect("Queue to ClientService broke!");
             self.state.with_state(|state| {
                 match cmd {
                     ClientCommand::Setup(mut sc, promise) => {
+                        info!(self.logger, "benchmark_client CC::Setup");
                         if *state != State::Ready {
                             *state = State::Ready; // Clearly Check-In succeeded, even if the RPC was faulty
                         }
@@ -229,6 +233,7 @@ impl BenchmarkClient {
                     },
                     ClientCommand::Cleanup(ci, promise) => match state {
                         State::Running(active_bench) => {
+                            info!(self.logger, "benchmark_client ClientCommand::Cleanup State::Running!");
                             let test_label = active_bench.label();
                             debug!(self.logger, "Cleaning active bench.");
                             if ci.get_field_final() {
