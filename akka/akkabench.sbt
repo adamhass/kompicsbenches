@@ -11,7 +11,7 @@ resolvers += Resolver.mavenLocal
 val akkaV = "2.5.25"
 
 libraryDependencies ++= Seq(
-  "se.kth.benchmarks" %% "benchmark-suite-shared" % "1.0.0",
+  "se.kth.benchmarks" %% "benchmark-suite-shared" % "1.0.0-SNAPSHOT",
   "com.typesafe.akka" %% "akka-actor" % akkaV,
   "com.typesafe.akka" %% "akka-remote" % akkaV,
   "com.typesafe.akka" %% "akka-actor-typed" % akkaV,
