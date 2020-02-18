@@ -1,6 +1,6 @@
 ThisBuild / organization := "se.kth.benchmarks"
 
-ThisBuild / version := "0.2.0"
+ThisBuild / version := "2.0.0-SNAPSHOT"
 
 ThisBuild / scalaVersion := "2.12.10"
 

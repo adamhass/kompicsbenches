@@ -115,6 +115,11 @@ def remote(withNodes: Path = defaultNodesFile, testing: Boolean = false, impls: 
 	println(s"There were $errors errors. Logs can be found in ${logdir}");
 }
 
+@doc("Empty function used to pre-compile the script.")
+@main
+def compile(): Unit = {
+}
+
 @doc("Run benchmarks using a cluster of nodes.")
 @main
 def fakeRemote(withClients: Int = 1, testing: Boolean = false, impls: Seq[String] = Seq.empty, benchmarks: Seq[String] = Seq.empty): Unit = {
