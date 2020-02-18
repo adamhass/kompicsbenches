@@ -12,7 +12,7 @@ import java.io.{PrintWriter, OutputStream, File, FileWriter}
 import java.nio.file.Files
 import $file.build, build.{relps, relp, binp, format}
 import $file.benchmarks, benchmarks._
-import $ivy.`com.decodified::scala-ssh:0.9.0`, com.decodified.scalassh.{SSH, HostConfigProvider, PublicKeyLogin}
+import $ivy.`com.decodified::scala-ssh:0.10.0`, com.decodified.scalassh.{SSH, HostConfigProvider, PublicKeyLogin}
 //import $ivy.`ch.qos.logback:logback-classic:1.1.7`
 
 val runnerAddr = "127.0.0.1:45678";
@@ -113,6 +113,11 @@ def remote(withNodes: Path = defaultNodesFile, testing: Boolean = false, impls: 
 	println("========");
 	println(s"Finished all runners in ${format(totalTime)}");
 	println(s"There were $errors errors. Logs can be found in ${logdir}");
+}
+
+@doc("Empty function used to pre-compile the script.")
+@main
+def compile(): Unit = {
 }
 
 @doc("Run benchmarks using a cluster of nodes.")
