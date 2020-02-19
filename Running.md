@@ -35,9 +35,9 @@ Other Options
 -------------
 
 - A subset of implementations `X,Y,Z` can be selected by adding `--impls X,Y,Z` to the `./bench.sc` command.
--- Valid impls args are `AKKA,AKKATYPED,KOMPICSSC,KOMPICSSC2,KOMPICSJ,KOMPACTAC,KOMPACTCO,KOMPACTMIX,ACTIX,ERLANG,RIKER`
+-- Valid args: `AKKA,AKKATYPED,KOMPICSSC,KOMPICSSC2,KOMPICSJ,KOMPACTAC,KOMPACTCO,KOMPACTMIX,ACTIX,ERLANG,RIKER`
 - A subset of benchmarks `X,Y,Z` can be selected by adding `--benchmarks X,Y,Z` to the `./bench.sc` command.
--- Valid benchmarks args are `PINGPONG|NETPINGPONG,TPPINGPONG|NETTPPINGPONG,ATOMICREGISTER,STREAMINGWINDOWS,FIBONACCI,CHAMENEOS,APSP`
+-- Valid args: `PINGPONG|NETPINGPONG,TPPINGPONG|NETTPPINGPONG,ATOMICREGISTER,STREAMINGWINDOWS,FIBONACCI,CHAMENEOS,APSP`
 
 
 Plotting
