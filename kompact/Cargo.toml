@@ -5,7 +5,6 @@ authors = ["Lars Kroll <lkroll@kth.se>"]
 edition = "2018"
 
 [dependencies]
-kompact 				= { git = "https://github.com/adamhass/kompact", branch = "futures3"}
 #kompact 				= { path = "../../kompics-rust/core/" }
 #kompact 				= "0.8"
 benchmark_suite_shared 	= { path = "../shared_rust/" }
@@ -21,6 +20,13 @@ num_cpus 				= "1"
 parse_duration 			= "2"
 rand 					= {version = "0.7", features = ["small_rng"]}
 chrono                  = "0.4"
+
+[dependencies.kompact]
+git = "https://github.com/adamhass/kompact"
+branch = "master"
+default-features = false
+features = ["ser_id_8", "silent_logging"]
+version = "0.9"
 
 [dev-dependencies]
 uuid = { version = "0.8", features = ["v4"] }
