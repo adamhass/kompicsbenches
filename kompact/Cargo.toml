@@ -26,7 +26,7 @@ git = "https://github.com/adamhass/kompact"
 branch = "master"
 default-features = false
 features = ["ser_id_8", "silent_logging"]
-version = "0.9"
+version = "0.10"
 
 [dev-dependencies]
 uuid = { version = "0.8", features = ["v4"] }

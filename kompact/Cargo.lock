@@ -558,8 +558,8 @@ dependencies = [
 
 [[package]]
 name = "kompact"
-version = "0.9.0"
-source = "git+https://github.com/adamhass/kompact#53534884541f3a7284b9b06b2299a6fff90df666"
+version = "0.10.0"
+source = "git+https://github.com/adamhass/kompact#37eb0deb4f080c0f1fc97921ec7f1d99d2390029"
 dependencies = [
  "arc-swap 0.3.11 (registry+https://github.com/rust-lang/crates.io-index)",
  "as_num 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -593,7 +593,7 @@ dependencies = [
 [[package]]
 name = "kompact-actor-derive"
 version = "0.9.0"
-source = "git+https://github.com/adamhass/kompact#53534884541f3a7284b9b06b2299a6fff90df666"
+source = "git+https://github.com/adamhass/kompact#37eb0deb4f080c0f1fc97921ec7f1d99d2390029"
 dependencies = [
  "proc-macro2 1.0.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "quote 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -603,7 +603,7 @@ dependencies = [
 [[package]]
 name = "kompact-component-derive"
 version = "0.9.0"
-source = "git+https://github.com/adamhass/kompact#53534884541f3a7284b9b06b2299a6fff90df666"
+source = "git+https://github.com/adamhass/kompact#37eb0deb4f080c0f1fc97921ec7f1d99d2390029"
 dependencies = [
  "proc-macro2 1.0.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "quote 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -619,7 +619,7 @@ dependencies = [
  "futures 0.1.29 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures-cpupool 0.1.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "grpc 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "kompact 0.9.0 (git+https://github.com/adamhass/kompact)",
+ "kompact 0.10.0 (git+https://github.com/adamhass/kompact)",
  "num_cpus 1.10.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "parse_duration 2.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "protobuf 2.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1828,7 +1828,7 @@ dependencies = [
 "checksum itertools 0.8.2 (registry+https://github.com/rust-lang/crates.io-index)" = "f56a2d0bc861f9165be4eb3442afd3c236d8a98afd426f65d92324ae1091a484"
 "checksum java-properties 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "caf4418ade5bde22a283a7f2fb537ea397ec102718f259f2630714e7a5b389fa"
 "checksum kernel32-sys 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "7507624b29483431c0ba2d82aece8ca6cdba9382bff4ddd0f7490560c056098d"
-"checksum kompact 0.9.0 (git+https://github.com/adamhass/kompact)" = "<none>"
+"checksum kompact 0.10.0 (git+https://github.com/adamhass/kompact)" = "<none>"
 "checksum kompact-actor-derive 0.9.0 (git+https://github.com/adamhass/kompact)" = "<none>"
 "checksum kompact-component-derive 0.9.0 (git+https://github.com/adamhass/kompact)" = "<none>"
 "checksum lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
