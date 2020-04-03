@@ -243,7 +243,7 @@ impl Pinger {
 impl Provide<ControlPort> for Pinger {
     fn handle(&mut self, _event: ControlEvent) -> () {
         // ignore
-        self.ctx_mut().initialize_pool();
+        self.ctx_mut().initialise_pool();
     }
 }
 
@@ -285,7 +285,7 @@ impl Ponger {
 impl Provide<ControlPort> for Ponger {
     fn handle(&mut self, _event: ControlEvent) -> () {
         // ignore
-        self.ctx_mut().initialize_pool();
+        self.ctx_mut().initialise_pool();
     }
 }
 
@@ -296,7 +296,7 @@ impl Actor for Ponger {
         unreachable!("Can't instantiate Never!");
     }
     fn receive_network(&mut self, msg: NetMessage) -> () {
-        let sender = msg.sender().clone();
+        let sender = msg.sender.clone();
 
         match_deser! {msg; {
             _ping: StaticPing [StaticPing] => {

@@ -50,7 +50,7 @@ impl Provide<ControlPort> for PartitioningActor {
             ControlEvent::Start => {
                 let min_key: u64 = 0;
                 let max_key = self.num_keys - 1;
-                //                info!(self.ctx.log(), "Sending init to nodes");
+                info!(self.ctx.log(), "Sending init to nodes");
                 for (r, node) in (&self.nodes).iter().enumerate() {
                     let rank = r as u32;
                     let init = Init {
@@ -81,26 +81,28 @@ impl Actor for PartitioningActor {
         match_deser! {msg; {
             _init_ack: InitAck [PartitioningActorSer] => {
                 self.init_ack_count += 1;
-                    //                    info!(self.ctx.log(), "Got init ack {}/{} from {}", &self.init_ack_count, &self.n, sender);
-                    if self.init_ack_count == self.n {
-                        info!(self.ctx.log(), "Got init_ack from everybody!");
-                        self.prepare_latch
-                            .decrement()
-                            .expect("Latch didn't decrement!");
-                    }
+                info!(self.ctx.log(), "Got init ack {}/{}", &self.init_ack_count, &self.n);
+                if self.init_ack_count == self.n {
+                    info!(self.ctx.log(), "Got init_ack from everybody!");
+                    self.prepare_latch
+                        .decrement()
+                        .expect("Latch didn't decrement!");
+                }
             },
             _done: Done [PartitioningActorSer] => {
+                info!(self.ctx.log(), "Done received");
                 self.done_count += 1;
-                    if self.done_count == self.n {
-                        info!(self.ctx.log(), "Everybody is done");
-                        self.finished_latch
-                            .as_ref()
-                            .unwrap()
-                            .decrement()
-                            .expect("Latch didn't decrement!");
-                    }
+                if self.done_count == self.n {
+                    info!(self.ctx.log(), "Everybody is done");
+                    self.finished_latch
+                        .as_ref()
+                        .unwrap()
+                        .decrement()
+                        .expect("Latch didn't decrement!");
+                }
             },
             td: TestDone [PartitioningActorSer] => {
+                info!(self.ctx().log(), "TestDone received");
                 self.done_count += 1;
                 self.test_results.extend(td.0);
                 if self.done_count == self.n {

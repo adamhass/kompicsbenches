@@ -498,6 +498,7 @@ pub mod actor_atomicregister {
                     .unwrap()
                     .tell((Done, PartitioningActorSer), self);
             } else {
+                info!(self.ctx.log(), "Sending TestDone");
                 self.master
                     .as_ref()
                     .unwrap()
@@ -516,7 +517,6 @@ pub mod actor_atomicregister {
     impl Provide<ControlPort> for AtomicRegisterActor {
         fn handle(&mut self, _event: ControlEvent) -> () {
             // ignore
-            self.ctx_mut().initialize_pool();
         }
     }
 
@@ -528,14 +528,16 @@ pub mod actor_atomicregister {
         }
 
         fn receive_network(&mut self, msg: NetMessage) -> () {
-            let sender = msg.sender().clone();
+            let sender = msg.sender.clone();
             let ser_id = msg.ser_id();
             match_deser! {msg; {
                 init: Init [PartitioningActorSer] => {
+                    info!(self.ctx.log(), "AtomicRegisterActor {} got Init", self.n);
                     self.new_iteration(&init);
-                        self.nodes = Some(init.nodes);
-                        let init_ack = InitAck(self.current_run_id);
-                        self.master = Some(sender);
+                    self.nodes = Some(init.nodes);
+                    let init_ack = InitAck(self.current_run_id);
+                    sender.tell((init_ack, PARTITIONING_ACTOR_SER), self);
+                    self.master = Some(sender);
                 },
                 _run: Run [PartitioningActorSer] => {
                     self.invoke_operations();
@@ -706,6 +708,7 @@ pub mod actor_atomicregister {
                 nodes.push(self_path);
             }
             /*** Setup partitioning actor ***/
+            println!("\nNodes and systems set-up, creating partitioning actor\n");
             let prepare_latch = Arc::new(CountdownEvent::new(1));
             let (p, f) = kpromise::<Vec<KVTimestamp>>();
             let (partitioning_actor, unique_reg_f) = systems[0].create_and_register(|| {
@@ -723,13 +726,16 @@ pub mod actor_atomicregister {
                 "PartitioningComp failed to register!",
             );
 
+            println!("\nStarting partitioning actor\n");
             let partitioning_actor_f = systems[0].start_notify(&partitioning_actor);
             partitioning_actor_f
                 .wait_timeout(Duration::from_millis(1000))
                 .expect("PartitioningComp never started!");
+            println!("\nAwaiting prepare latch\n");
             prepare_latch.wait();
             let partitioning_actor_ref = partitioning_actor.actor_ref();
             partitioning_actor_ref.tell(Run);
+            println!("\nAwaiting results\n");
             let results = f.wait();
             for system in systems {
                 system
@@ -1406,7 +1412,7 @@ pub mod mixed_atomicregister {
         }
 
         fn receive_network(&mut self, msg: NetMessage) -> () {
-            let sender = msg.sender().clone();
+            let sender = msg.sender.clone();
 
             match_deser! {msg; {
                 init: Init [PartitioningActorSer] => {
@@ -1624,7 +1630,6 @@ pub mod mixed_atomicregister {
                 Duration::from_millis(1000),
                 "PartitioningComp failed to register!",
             );
-
             let partitioning_actor_f = systems[0].start_notify(&partitioning_actor);
             partitioning_actor_f
                 .wait_timeout(Duration::from_millis(1000))
@@ -1632,7 +1637,9 @@ pub mod mixed_atomicregister {
             prepare_latch.wait();
             let partitioning_actor_ref = partitioning_actor.actor_ref();
             partitioning_actor_ref.tell(Run);
+            println!("\nAwaiting results\n");
             let results = f.wait();
+            println!("\nShutting down systems\n");
             for system in systems {
                 system
                     .shutdown()
