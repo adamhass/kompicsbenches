@@ -57,7 +57,7 @@ object ImplResults {
   def mapData[Params](
     input: Map[String, ImplGroupedResult[Params]],
     f:     (Params, Double) => Double): Map[String, ImplGroupedResult[Params]] = {
-    input.mapValues(_.mapMeans(f))
+    input.mapValues(_.mapMeans(f)).toMap
   }
 
   def merge[Params](
@@ -158,11 +158,11 @@ case class ImplGroupedResult[Params: ClassTag](implLabel: String, params: List[P
   }
 
   def slices[T](grouper: Params => T, mapper: Params => Long): Map[T, Impl2DResult] = {
-    groupBy(grouper).mapValues(_.map2D(mapper))
+    groupBy(grouper).mapValues(_.map2D(mapper)).toMap
   }
 
   def dices[T](grouper: Params => T, mapper: Params => (Long, Long)): Map[T, Impl3DResult] = {
-    groupBy(grouper).mapValues(_.map3D(mapper))
+    groupBy(grouper).mapValues(_.map3D(mapper)).toMap
   }
 
   def slice(keep: Params => Boolean, mapper: Params => Long): Impl2DResult = {
