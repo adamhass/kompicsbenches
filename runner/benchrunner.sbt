@@ -6,7 +6,7 @@ version in ThisBuild := "0.2.0"
 
 scalaVersion in ThisBuild := "2.13.1"
 
-//crossScalaVersions in ThisBuild := List("2.12.10", "2.13.1")
+crossScalaVersions in ThisBuild := List("2.12.10", "2.13.1")
 
 resolvers += Resolver.mavenLocal
 resolvers += Resolver.bintrayRepo("lkrollcom", "maven")

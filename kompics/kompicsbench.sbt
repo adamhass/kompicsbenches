@@ -1,13 +1,13 @@
 ThisBuild / organization := "se.kth.benchmarks"
 
-ThisBuild / version := "2.0.0-SNAPSHOT"
+ThisBuild / version := "2.0.0"
 
-ThisBuild / scalaVersion := "2.12.10"
+ThisBuild / scalaVersion := "2.13.1"
 
 ThisBuild / resolvers ++= Seq(Resolver.mavenLocal, Resolver.jcenterRepo, Resolver.bintrayRepo("kompics", "Maven"))
 
 val kompicsV = "1.1.0";
-val kompicsScala1xV = "1.1.0";
+//val kompicsScala1xV = "1.1.0";
 val kompicsScala2xV = "2.0.0";
 
 lazy val commonSettings = Seq(
@@ -41,7 +41,7 @@ lazy val shared = (project in file("shared"))
     commonSettings,
     name := "Kompics Benchmark Suite (Shared)",
     libraryDependencies ++= Seq(
-      "se.kth.benchmarks" %% "benchmark-suite-shared" % "1.0.0-SNAPSHOT" excludeAll (
+      "se.kth.benchmarks" %% "benchmark-suite-shared" % "1.0.0" excludeAll (
         ExclusionRule(organization = "io.netty")
       ),
       "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.0",
@@ -74,7 +74,7 @@ lazy val kompicsScala1x = (project in file("kompicsscala1x"))
       "se.sics.kompics" %% "kompics-scala" % kompicsScala1xV
     )
   );
-
+*/
 lazy val kompicsScala2x = (project in file("kompicsscala2x"))
   .dependsOn(shared % "test->test;compile->compile")
   .settings(
