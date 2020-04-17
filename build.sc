@@ -42,6 +42,7 @@ val builders: List[Builder] = List(
 	Builder("Akka", relp("akka"), sbtEnv, sbt, Seq("assembly"), Seq("clean")),
 	Builder("Kompics", relp("kompics"), sbtEnv, sbt, Seq("assembly"), Seq("clean")),
 	Builder("Kompact", relp("kompact"), cargoEnv, cargo, cargoBuildCmd, Seq("clean")),
+	Builder("Kompacttokio", relp("kompacttokio"), cargoEnv, cargo, cargoBuildCmd, Seq("clean")),
 	Builder("Actix", relp("actix"), cargoEnv, cargo,  cargoBuildCmd, Seq("clean")),
 	Builder("Erlang", relp("erlang"), makeEnv, make, Seq(), Seq("clean")),
 	Builder("Riker", relp("riker"), cargoEnv, cargo,  cargoBuildCmd, Seq("clean")),
