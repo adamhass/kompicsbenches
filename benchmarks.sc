@@ -128,9 +128,9 @@ val implementations: Map[String, BenchmarkImpl] = Map(
 	"KOMPACTTOKIO" -> BenchmarkImpl(
 		symbol="KOMPACTTOKIO",
 		label="Kompact Tokio",
-		local = (benchRunnerAddr) => Runner(relp("kompact"), relp("kompacttokio/target/release/kompacttokio_benchmarks"), Seq("actor", benchRunnerAddr)),
-		remote = (benchRunnerAddr, benchMasterAddr, numClients) => Runner(relp("kompact"), relp("kompacttokio/target/release/kompacttokio_benchmarks"), Seq("actor", benchRunnerAddr, benchMasterAddr, numClients)),
-		client = (benchMasterAddr, benchClientAddr) => Runner(relp("kompact"), relp("kompacttokio/target/release/kompacttokio_benchmarks"), Seq("actor", benchMasterAddr, benchClientAddr)),
+		local = (benchRunnerAddr) => Runner(relp("kompacttokio"), relp("kompacttokio/target/release/kompacttokio_benchmarks"), Seq("actor", benchRunnerAddr)),
+		remote = (benchRunnerAddr, benchMasterAddr, numClients) => Runner(relp("kompacttokio"), relp("kompacttokio/target/release/kompacttokio_benchmarks"), Seq("actor", benchRunnerAddr, benchMasterAddr, numClients)),
+		client = (benchMasterAddr, benchClientAddr) => Runner(relp("kompacttokio"), relp("kompacttokio/target/release/kompacttokio_benchmarks"), Seq("actor", benchMasterAddr, benchClientAddr)),
 		mustCopy = List(relp("kompacttokio/target/release/kompacttokio_benchmarks"))
 	),
 	"ACTIX" -> BenchmarkImpl(

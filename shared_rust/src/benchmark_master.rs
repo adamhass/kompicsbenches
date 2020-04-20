@@ -587,7 +587,7 @@ impl benchmarks_grpc::BenchmarkRunner for RunnerHandler {
         _p: messages::ReadyRequest,
     ) -> grpc::SingleResponse<messages::ReadyResponse>
     {
-        info!(self.logger, "Got ready? req.");
+        info!(self.logger, "Got ready? req., state: {:?}", self.state.get());
         let mut msg = messages::ReadyResponse::new();
         if self.state.get() == State::READY {
             msg.set_status(true);
