@@ -1,20 +1,19 @@
 package se.kth.benchmarks.runner
 
-import kompics.benchmarks.benchmarks._
-import kompics.benchmarks.messages._
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
-import se.kth.benchmarks.Statistics;
-
 import com.lkroll.common.macros.Macros
 import com.typesafe.scalalogging.{LazyLogging, StrictLogging}
 import java.io.{File, FileWriter, PrintWriter}
+import scala.collection.mutable.ListBuffer
+import se.kth.benchmarks.Statistics;
+import kompics.benchmarks.benchmarks._
+import kompics.benchmarks.messages._
+
 
 object Runner {
-
   type Stub = BenchmarkRunnerGrpc.BenchmarkRunnerStub;
-
   val WAIT: Duration = 500.milliseconds;
   val MAX_RETRIES: Int = 130;
 }
@@ -57,8 +56,12 @@ class Runner(conf: Conf, stub: Runner.Stub) extends LazyLogging {
   }
 
   def runOnly(benchmarks: List[String]): Unit = {
-    val benchString = benchmarks.mkString;
-    val selected = Benchmarks.benchmarks.filter(bench => benchString.contains(bench.symbol));
+    val selected = new ListBuffer[Benchmark];
+    for (bench <- Benchmarks.benchmarks) {
+    for (bench_comp <- benchmarks) {
+    if (bench_comp == bench.symbol) selected += bench
+  }
+  };
     if (selected.isEmpty) {
       logger.error(s"No benchmarks were selected by list ${benchmarks.mkString("[", ",", "]")}! Shutting down.");
       System.exit(1);

@@ -87,7 +87,7 @@ object Benchmarks extends ParameterDescriptionImplicits {
       stub.throughputPingPong(request)
     },
     space = ParameterSpacePB
-      .cross(List(1L.mio, 10L.mio), List(10, 50, 500), List(1, 2, 4, 8, 16, 24, 32, 34, 36, 38, 40), List(true, false))
+      .cross(List(1L.mio, 100L.mio), List(10, 100, 1000), List(1, 4, 8, 16, 32, 64), List(true, false))
       .msg[ThroughputPingPongRequest] {
         case (n, p, par, s) =>
           ThroughputPingPongRequest(messagesPerPair = n, pipelineSize = p, parallelism = par, staticOnly = s)
@@ -107,7 +107,7 @@ object Benchmarks extends ParameterDescriptionImplicits {
       stub.netThroughputPingPong(request)
     },
     space = ParameterSpacePB
-      .cross(List(1L.k, 10L.k, 20L.k), List(10, 100, 1000), List(1, 2, 4, 8, 16, 24), List(true, false))
+      .cross(List(1L.k, 100L.k), List(10, 100, 1000), List(1, 4, 8, 16, 32, 64), List(true, false))
       .msg[ThroughputPingPongRequest] {
         case (n, p, par, s) =>
           ThroughputPingPongRequest(messagesPerPair = n, pipelineSize = p, parallelism = par, staticOnly = s)
