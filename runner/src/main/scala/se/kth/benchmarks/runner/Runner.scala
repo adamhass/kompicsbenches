@@ -56,12 +56,17 @@ class Runner(conf: Conf, stub: Runner.Stub) extends LazyLogging {
   }
 
   def runOnly(benchmarks: List[String]): Unit = {
+    val benchmarksstring = benchmarks.mkString("");
+    val benchSet = benchmarksstring.split(",");
     val selected = new ListBuffer[Benchmark];
     for (bench <- Benchmarks.benchmarks) {
-    for (bench_comp <- benchmarks) {
-    if (bench_comp == bench.symbol) selected += bench
-  }
-  };
+      for (bench_comp <- benchSet) {
+        logger.info(s"Comparing ${bench_comp} to ${bench.symbol}...");
+        if (bench_comp == bench.symbol) {
+          selected += bench;
+        }
+      }
+    };
     if (selected.isEmpty) {
       logger.error(s"No benchmarks were selected by list ${benchmarks.mkString("[", ",", "]")}! Shutting down.");
       System.exit(1);
