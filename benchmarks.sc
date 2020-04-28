@@ -116,7 +116,7 @@ val implementations: Map[String, BenchmarkImpl] = Map(
 		remote = (benchRunnerAddr, benchMasterAddr, numClients) => Runner(relp("kompact"), relp("kompact/target/release/kompact_benchmarks"), Seq("component", benchRunnerAddr, benchMasterAddr, numClients)),
 		client = (benchMasterAddr, benchClientAddr) => Runner(relp("kompact"), relp("kompact/target/release/kompact_benchmarks"), Seq("component", benchMasterAddr, benchClientAddr)),
 		mustCopy = List(relp("kompact/target/release/kompact_benchmarks"))
-	),
+),
 	"KOMPACTMIX" -> BenchmarkImpl(
 		symbol="KOMPACTMIX",
 		label="Kompact Mixed",
@@ -124,6 +124,30 @@ val implementations: Map[String, BenchmarkImpl] = Map(
 		remote = (benchRunnerAddr, benchMasterAddr, numClients) => Runner(relp("kompact"), relp("kompact/target/release/kompact_benchmarks"), Seq("mixed", benchRunnerAddr, benchMasterAddr, numClients)),
 		client = (benchMasterAddr, benchClientAddr) => Runner(relp("kompact"), relp("kompact/target/release/kompact_benchmarks"), Seq("mixed", benchMasterAddr, benchClientAddr)),
 		mustCopy = List(relp("kompact/target/release/kompact_benchmarks"))
+),
+	"KOMPACTNORE" -> BenchmarkImpl(
+		symbol="KOMPACTNORE",
+		label="Kompact No Reuse",
+		local = (benchRunnerAddr) => Runner(relp("kompact-no-reuse"), relp("kompact-no-reuse/target/release/kompact-no-reuse_benchmarks"), Seq("actor", benchRunnerAddr)),
+		remote = (benchRunnerAddr, benchMasterAddr, numClients) => Runner(relp("kompact-no-reuse"), relp("kompact-no-reuse/target/release/kompact-no-reuse_benchmarks"), Seq("actor", benchRunnerAddr, benchMasterAddr, numClients)),
+		client = (benchMasterAddr, benchClientAddr) => Runner(relp("kompact-no-reuse"), relp("kompact-no-reuse/target/release/kompact-no-reuse_benchmarks"), Seq("actor", benchMasterAddr, benchClientAddr)),
+		mustCopy = List(relp("kompact-no-reuse/target/release/kompact-no-reuse_benchmarks"))
+	),
+	"KOMPACTNOREIN" -> BenchmarkImpl(
+		symbol="KOMPACTNOREIN",
+		label="Kompact No Reuse Inbound",
+		local = (benchRunnerAddr) => Runner(relp("kompact-no-reuse-in"), relp("kompact-no-reuse-in/target/release/kompact-no-reuse-in_benchmarks"), Seq("actor", benchRunnerAddr)),
+		remote = (benchRunnerAddr, benchMasterAddr, numClients) => Runner(relp("kompact-no-reuse-in"), relp("kompact-no-reuse-in/target/release/kompact-no-reuse-in_benchmarks"), Seq("actor", benchRunnerAddr, benchMasterAddr, numClients)),
+		client = (benchMasterAddr, benchClientAddr) => Runner(relp("kompact-no-reuse-in"), relp("kompact-no-reuse-in/target/release/kompact-no-reuse-in_benchmarks"), Seq("actor", benchMasterAddr, benchClientAddr)),
+		mustCopy = List(relp("kompact-no-reuse-in/target/release/kompact-no-reuse-in_benchmarks"))
+	),
+	"KOMPACTNOREOUT" -> BenchmarkImpl(
+		symbol="KOMPACTNOREOUT",
+		label="Kompact No Reuse Outbound",
+		local = (benchRunnerAddr) => Runner(relp("kompact-no-reuse-out"), relp("kompact-no-reuse-out/target/release/kompact-no-reuse-out_benchmarks"), Seq("actor", benchRunnerAddr)),
+		remote = (benchRunnerAddr, benchMasterAddr, numClients) => Runner(relp("kompact-no-reuse-out"), relp("kompact-no-reuse-out/target/release/kompact-no-reuse-out_benchmarks"), Seq("actor", benchRunnerAddr, benchMasterAddr, numClients)),
+		client = (benchMasterAddr, benchClientAddr) => Runner(relp("kompact-no-reuse-out"), relp("kompact-no-reuse-out/target/release/kompact-no-reuse-out_benchmarks"), Seq("actor", benchMasterAddr, benchClientAddr)),
+		mustCopy = List(relp("kompact-no-reuse-out/target/release/kompact-no-reuse-out_benchmarks"))
 	),
 	"KOMPACTTOKIO" -> BenchmarkImpl(
 		symbol="KOMPACTTOKIO",
