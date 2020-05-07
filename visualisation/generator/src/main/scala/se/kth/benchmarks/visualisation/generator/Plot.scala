@@ -10,6 +10,7 @@ import scala.collection.immutable
 import com.github.tototoshi.csv._
 import se.kth.benchmarks.runner.{Benchmark, Benchmarks}
 import scalatags.Text
+//import $file.`..`.`..`.`..`.`..`.`..`.`..`.`..`.`..`.`..`.benchmarks, benchmarks.{BenchmarkImpl, implementations}
 
 object Plotter extends StrictLogging {
   def fromSource(source: File): Try[Plotted] = Try {
@@ -47,7 +48,7 @@ object Plotter extends StrictLogging {
     val reader = CSVReader.open(source);
     val rawData = reader.allWithHeaders();
     reader.close()
-    logger.debug(s"Read all data from ${source} (${rawData.size} lines).");
+    logger.debug(s"Read all data from ${source} (${rawData.size} lines)!");
     // IMPL,PARAMS,MEAN,SSD,SEM,RSE,CI95LO,CI95UP
     val stats = rawData.map(m => (m("IMPL"), m("PARAMS"), Statistics.fromRow(m)));
     val statsGrouped = stats.groupBy(_._1).map {
@@ -56,6 +57,7 @@ object Plotter extends StrictLogging {
         val stats = entries.map(_._3);
         (key -> ImplGroupedResult(implementations(key).label, params, stats))
     };
+    logger.debug(s"Generated statsGrouped...");
     val benchO = Benchmarks.benchmarkLookup.get(title);
     benchO match {
       case Some(bench) => BenchmarkData(bench, statsGrouped)

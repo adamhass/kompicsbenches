@@ -3,7 +3,6 @@ package se.kth.benchmarks.visualisation.generator
 import scalatags.Text.all._
 
 object BootstrapStyle {
-
   val active = cls := "active";
   val alert = cls := "alert";
   val alertInfo = cls := "alert-info";

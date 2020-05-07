@@ -251,15 +251,14 @@ impl Actor for Pinger {
     type Message = &'static Run;
 
     fn receive_local(&mut self, _msg: Self::Message) -> () {
-        self.ponger.tell_serialised(STATIC_PING, self)
-            .expect("Should have serialised!");
+        self.ponger.tell(STATIC_PING, self);
     }
     fn receive_network(&mut self, msg: NetMessage) -> () {
         match_deser! {msg; {
             _pong: StaticPong [StaticPong] => {
                 self.count_down -= 1;
                 if self.count_down > 0 {
-                    self.ponger.tell_serialised(STATIC_PING, self).expect("Should have serialised!");
+                    self.ponger.tell(STATIC_PING, self);
                 } else {
                     self.latch.decrement().expect("Should decrement!");
                 }
@@ -300,7 +299,7 @@ impl Actor for Ponger {
 
         match_deser! {msg; {
             _ping: StaticPing [StaticPing] => {
-                sender.tell_serialised(STATIC_PONG, self).expect("Should have serialised");
+                sender.tell(STATIC_PONG, self);
             },
             !Err(e) => error!(self.ctx.log(), "Error deserialising StaticPing: {:?}", e),
         }}
