@@ -29,7 +29,7 @@ impl PartitioningActor {
         test_promise: Option<KPromise<Vec<KVTimestamp>>>,
     ) -> PartitioningActor {
         PartitioningActor {
-            ctx: ComponentContext::new(),
+            ctx: ComponentContext::uninitialised(),
             prepare_latch,
             finished_latch,
             init_id,
@@ -44,40 +44,37 @@ impl PartitioningActor {
     }
 }
 
-impl Provide<ControlPort> for PartitioningActor {
-    fn handle(&mut self, event: ControlEvent) -> () {
-        match event {
-            ControlEvent::Start => {
-                let min_key: u64 = 0;
-                let max_key = self.num_keys - 1;
-                info!(self.ctx.log(), "Sending init to nodes");
-                for (r, node) in (&self.nodes).iter().enumerate() {
-                    let rank = r as u32;
-                    let init = Init {
-                        rank,
-                        init_id: self.init_id,
-                        nodes: self.nodes.clone(),
-                        min_key,
-                        max_key,
-                    };
-                    node.tell((init, PARTITIONING_ACTOR_SER), self);
-                }
-            }
-            _ => {} // ignore
+impl ComponentLifecycle for PartitioningActor {
+    fn on_start(&mut self) -> Handled {
+        let min_key: u64 = 0;
+        let max_key = self.num_keys - 1;
+        info!(self.ctx.log(), "Sending init to nodes");
+        for (r, node) in (&self.nodes).iter().enumerate() {
+            let rank = r as u32;
+            let init = Init {
+                rank,
+                init_id: self.init_id,
+                nodes: self.nodes.clone(),
+                min_key,
+                max_key,
+            };
+            node.tell((init, PARTITIONING_ACTOR_SER), self);
         }
+        Handled::Ok
     }
 }
 
 impl Actor for PartitioningActor {
     type Message = Run;
 
-    fn receive_local(&mut self, _msg: Self::Message) -> () {
+    fn receive_local(&mut self, _msg: Self::Message) -> Handled {
         for node in &self.nodes {
             node.tell((Run, PARTITIONING_ACTOR_SER), self);
         }
+        Handled::Ok
     }
 
-    fn receive_network(&mut self, msg: NetMessage) -> () {
+    fn receive_network(&mut self, msg: NetMessage) -> Handled {
         match_deser! {msg; {
             _init_ack: InitAck [PartitioningActorSer] => {
                 self.init_ack_count += 1;
@@ -114,6 +111,7 @@ impl Actor for PartitioningActor {
             },
             !Err(e) => error!(self.ctx.log(), "Error deserialising msg: {:?}", e),
         }}
+        Handled::Ok
     }
 }
 

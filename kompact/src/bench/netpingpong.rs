@@ -229,10 +229,14 @@ struct Pinger {
     count_down: u64,
 }
 
+impl ComponentLifecycle for Pinger {
+    fn on_start(&mut self) -> Handled {Handled::Ok}
+}
+
 impl Pinger {
     fn with(count: u64, latch: Arc<CountdownEvent>, ponger: ActorPath) -> Pinger {
         Pinger {
-            ctx: ComponentContext::new(),
+            ctx: ComponentContext::uninitialised(),
             latch,
             ponger,
             count_down: count,
@@ -240,21 +244,15 @@ impl Pinger {
     }
 }
 
-impl Provide<ControlPort> for Pinger {
-    fn handle(&mut self, _event: ControlEvent) -> () {
-        // ignore
-        self.ctx_mut().initialise_pool();
-    }
-}
-
 impl Actor for Pinger {
     type Message = &'static Run;
 
-    fn receive_local(&mut self, _msg: Self::Message) -> () {
+    fn receive_local(&mut self, _msg: Self::Message) -> Handled {
         self.ponger.tell_serialised(STATIC_PING, self)
             .expect("Should have serialised!");
+        Handled::Ok
     }
-    fn receive_network(&mut self, msg: NetMessage) -> () {
+    fn receive_network(&mut self, msg: NetMessage) -> Handled {
         match_deser! {msg; {
             _pong: StaticPong [StaticPong] => {
                 self.count_down -= 1;
@@ -266,6 +264,7 @@ impl Actor for Pinger {
             },
             !Err(e) => error!(self.ctx.log(), "Error deserialising StaticPong: {:?}", e),
         }}
+        Handled::Ok
     }
 }
 
@@ -277,25 +276,23 @@ struct Ponger {
 impl Ponger {
     fn new() -> Ponger {
         Ponger {
-            ctx: ComponentContext::new(),
+            ctx: ComponentContext::uninitialised(),
         }
     }
 }
 
-impl Provide<ControlPort> for Ponger {
-    fn handle(&mut self, _event: ControlEvent) -> () {
-        // ignore
-        self.ctx_mut().initialise_pool();
-    }
+impl ComponentLifecycle for Ponger {
+    fn on_start(&mut self) -> Handled {Handled::Ok}
 }
 
 impl Actor for Ponger {
     type Message = Never;
 
-    fn receive_local(&mut self, _msg: Self::Message) -> () {
+    fn receive_local(&mut self, _msg: Self::Message) -> Handled {
         unreachable!("Can't instantiate Never!");
+        Handled::Ok
     }
-    fn receive_network(&mut self, msg: NetMessage) -> () {
+    fn receive_network(&mut self, msg: NetMessage) -> Handled {
         let sender = msg.sender.clone();
 
         match_deser! {msg; {
@@ -304,5 +301,6 @@ impl Actor for Ponger {
             },
             !Err(e) => error!(self.ctx.log(), "Error deserialising StaticPing: {:?}", e),
         }}
+        Handled::Ok
     }
 }

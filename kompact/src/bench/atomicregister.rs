@@ -373,10 +373,14 @@ pub mod actor_atomicregister {
         timestamps: Vec<KVTimestamp>,
     }
 
+    impl ComponentLifecycle for AtomicRegisterActor {
+        fn on_start(&mut self) -> Handled {Handled::Ok}
+    }
+
     impl AtomicRegisterActor {
         fn with(read_workload: f32, write_workload: f32, testing: bool) -> AtomicRegisterActor {
             AtomicRegisterActor {
-                ctx: ComponentContext::new(),
+                ctx: ComponentContext::uninitialised(),
                 read_workload,
                 write_workload,
                 master: None,
@@ -514,20 +518,15 @@ pub mod actor_atomicregister {
         }
     }
 
-    impl Provide<ControlPort> for AtomicRegisterActor {
-        fn handle(&mut self, _event: ControlEvent) -> () {
-            // ignore
-        }
-    }
-
     impl Actor for AtomicRegisterActor {
         type Message = Never;
 
-        fn receive_local(&mut self, _msg: Self::Message) -> () {
+        fn receive_local(&mut self, _msg: Self::Message) -> Handled {
             unimplemented!("Can't be invoked!");
+            Handled::Ok
         }
 
-        fn receive_network(&mut self, msg: NetMessage) -> () {
+        fn receive_network(&mut self, msg: NetMessage) -> Handled {
             let sender = msg.sender.clone();
             let ser_id = msg.ser_id();
             match_deser! {msg; {
@@ -655,6 +654,7 @@ pub mod actor_atomicregister {
                     unimplemented!();
                 },
             }}
+            Handled::Ok
         }
     }
 
@@ -710,7 +710,7 @@ pub mod actor_atomicregister {
             /*** Setup partitioning actor ***/
             println!("\nNodes and systems set-up, creating partitioning actor\n");
             let prepare_latch = Arc::new(CountdownEvent::new(1));
-            let (p, f) = kpromise::<Vec<KVTimestamp>>();
+            let (p, f) = promise::<Vec<KVTimestamp>>();
             let (partitioning_actor, unique_reg_f) = systems[0].create_and_register(|| {
                 PartitioningActor::with(
                     prepare_latch.clone(),
@@ -1174,30 +1174,28 @@ pub mod mixed_atomicregister {
     #[derive(ComponentDefinition)]
     struct BroadcastComp {
         ctx: ComponentContext<BroadcastComp>,
-        bcast_port: ProvidedPort<BroadcastPort, BroadcastComp>,
+        bcast_port: ProvidedPort<BroadcastPort>,
         nodes: Option<Vec<ActorPath>>,
         sender: Option<ActorPath>,
+    }
+
+    impl ComponentLifecycle for BroadcastComp {
+        fn on_start(&mut self) -> Handled {Handled::Ok}
     }
 
     impl BroadcastComp {
         fn new() -> BroadcastComp {
             BroadcastComp {
-                ctx: ComponentContext::new(),
-                bcast_port: ProvidedPort::new(),
+                ctx: ComponentContext::uninitialised(),
+                bcast_port: ProvidedPort::uninitialised(),
                 nodes: None,
                 sender: None,
             }
         }
     }
 
-    impl Provide<ControlPort> for BroadcastComp {
-        fn handle(&mut self, _event: <ControlPort as Port>::Request) -> () {
-            // ignore
-        }
-    }
-
     impl Provide<BroadcastPort> for BroadcastComp {
-        fn handle(&mut self, request: BroadcastRequest) -> () {
+        fn handle(&mut self, request: BroadcastRequest) -> Handled {
             let nodes = self.nodes.as_ref().unwrap();
             let sender = self.sender.as_ref().unwrap();
             let payload = request.0;
@@ -1207,27 +1205,30 @@ pub mod mixed_atomicregister {
                     &sender.using_dispatcher(self),
                 );
             }
+            Handled::Ok
         }
     }
 
     impl Actor for BroadcastComp {
         type Message = WithSender<CacheInfo, CacheNodesAck>;
 
-        fn receive_local(&mut self, msg: Self::Message) -> () {
+        fn receive_local(&mut self, msg: Self::Message) -> Handled {
             self.nodes = Some(msg.nodes.clone());
             self.sender = Some(msg.sender.clone());
             msg.reply(CacheNodesAck);
+            Handled::Ok
         }
 
-        fn receive_network(&mut self, _msg: NetMessage) -> () {
+        fn receive_network(&mut self, _msg: NetMessage) -> Handled {
             // ignore
+            Handled::Ok
         }
     }
 
     #[derive(ComponentDefinition)]
     struct AtomicRegisterComp {
         ctx: ComponentContext<AtomicRegisterComp>,
-        bcast_port: RequiredPort<BroadcastPort, AtomicRegisterComp>,
+        bcast_port: RequiredPort<BroadcastPort>,
         bcast_ref: ActorRef<WithSender<CacheInfo, CacheNodesAck>>,
         read_workload: f32,
         write_workload: f32,
@@ -1248,6 +1249,10 @@ pub mod mixed_atomicregister {
         timestamps: Vec<KVTimestamp>,
     }
 
+    impl ComponentLifecycle for AtomicRegisterComp {
+        fn on_start(&mut self) -> Handled {Handled::Ok}
+    }
+
     impl AtomicRegisterComp {
         fn with(
             read_workload: f32,
@@ -1256,8 +1261,8 @@ pub mod mixed_atomicregister {
             testing: bool,
         ) -> AtomicRegisterComp {
             AtomicRegisterComp {
-                ctx: ComponentContext::new(),
-                bcast_port: RequiredPort::new(),
+                ctx: ComponentContext::uninitialised(),
+                bcast_port: RequiredPort::uninitialised(),
                 bcast_ref,
                 read_workload,
                 write_workload,
@@ -1390,28 +1395,24 @@ pub mod mixed_atomicregister {
         }
     }
 
-    impl Provide<ControlPort> for AtomicRegisterComp {
-        fn handle(&mut self, _event: <ControlPort as Port>::Request) -> () {
-            // ignore
-        }
-    }
-
     impl Require<BroadcastPort> for AtomicRegisterComp {
-        fn handle(&mut self, _event: <BroadcastPort as Port>::Indication) -> () {
+        fn handle(&mut self, _event: <BroadcastPort as Port>::Indication) -> Handled {
             // ignore
+            Handled::Ok
         }
     }
 
     impl Actor for AtomicRegisterComp {
         type Message = CacheNodesAck;
 
-        fn receive_local(&mut self, _msg: Self::Message) -> () {
+        fn receive_local(&mut self, _msg: Self::Message) -> Handled {
             let master = self.master.as_ref().unwrap();
             let init_ack = InitAck(self.current_run_id);
             master.tell((init_ack, PARTITIONING_ACTOR_SER), self);
+            Handled::Ok
         }
 
-        fn receive_network(&mut self, msg: NetMessage) -> () {
+        fn receive_network(&mut self, msg: NetMessage) -> Handled {
             let sender = msg.sender.clone();
 
             match_deser! {msg; {
@@ -1541,6 +1542,7 @@ pub mod mixed_atomicregister {
                 },
                 !Err(e) => error!(self.ctx.log(), "Error deserialising msg: {:?}", e),
             }}
+            Handled::Ok
         }
     }
 
@@ -1615,7 +1617,7 @@ pub mod mixed_atomicregister {
             }
             /*** Setup partitioning actor ***/
             let prepare_latch = Arc::new(CountdownEvent::new(1));
-            let (p, f) = kpromise::<Vec<KVTimestamp>>();
+            let (p, f) = promise::<Vec<KVTimestamp>>();
             let (partitioning_actor, unique_reg_f) = systems[0].create_and_register(|| {
                 PartitioningActor::with(
                     prepare_latch.clone(),
