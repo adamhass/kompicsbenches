@@ -8,7 +8,7 @@
 	run/2
 	]).
 
--define(MIN_RUNS, 30).
+-define(MIN_RUNS, 5).
 -define(MAX_RUNS, 100).
 -define(RSE_TARGET, 0.1). % 10% RSE
 
