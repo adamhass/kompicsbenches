@@ -860,7 +860,7 @@ dependencies = [
 [[package]]
 name = "kompact"
 version = "0.10.0"
-source = "git+https://github.com/kompics/kompact?rev=1edc19f18cf2c98eaabe8235be613718a43458e6#1edc19f18cf2c98eaabe8235be613718a43458e6"
+source = "git+https://github.com/adamhass/kompact?rev=439ebae3888edb51c8bfae3fc4bf234ab0356e74#439ebae3888edb51c8bfae3fc4bf234ab0356e74"
 dependencies = [
  "arc-swap",
  "as_num",
@@ -897,7 +897,7 @@ dependencies = [
 [[package]]
 name = "kompact-actor-derive"
 version = "0.10.0"
-source = "git+https://github.com/kompics/kompact?rev=1edc19f18cf2c98eaabe8235be613718a43458e6#1edc19f18cf2c98eaabe8235be613718a43458e6"
+source = "git+https://github.com/adamhass/kompact?rev=439ebae3888edb51c8bfae3fc4bf234ab0356e74#439ebae3888edb51c8bfae3fc4bf234ab0356e74"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -907,7 +907,7 @@ dependencies = [
 [[package]]
 name = "kompact-component-derive"
 version = "0.10.0"
-source = "git+https://github.com/kompics/kompact?rev=1edc19f18cf2c98eaabe8235be613718a43458e6#1edc19f18cf2c98eaabe8235be613718a43458e6"
+source = "git+https://github.com/adamhass/kompact?rev=439ebae3888edb51c8bfae3fc4bf234ab0356e74#439ebae3888edb51c8bfae3fc4bf234ab0356e74"
 dependencies = [
  "proc-macro2",
  "quote",
