@@ -11,6 +11,8 @@ use chrono::Utc;
 use synchronoise::CountdownEvent;
 use benchmark_suite_shared::test_utils::KVTimestamp;
 use benchmark_suite_shared::test_utils::KVOperation;
+use rand::Rng;
+use benchmark_suite_shared::test_utils::all_linearizable;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ClientParams {
@@ -705,7 +707,7 @@ pub mod actor_atomicregister {
             /*** Setup partitioning actor ***/
             println!("\nNodes and systems set-up, creating partitioning actor\n");
             let prepare_latch = Arc::new(CountdownEvent::new(1));
-            let (p, f) = kpromise::<Vec<KVTimestamp>>();
+            let (p, f) = promise::<Vec<KVTimestamp>>();
             let (partitioning_actor, unique_reg_f) = systems[0].create_and_register(|| {
                 PartitioningActor::with(
                     prepare_latch.clone(),
@@ -1213,7 +1215,8 @@ pub mod mixed_atomicregister {
         }
 
         fn receive_network(&mut self, _msg: NetMessage) -> Handled {
-            unimplemented!()
+            // ignore
+            Handled::Ok
         }
     }
 
@@ -1606,7 +1609,7 @@ pub mod mixed_atomicregister {
             }
             /*** Setup partitioning actor ***/
             let prepare_latch = Arc::new(CountdownEvent::new(1));
-            let (p, f) = kpromise::<Vec<KVTimestamp>>();
+            let (p, f) = promise::<Vec<KVTimestamp>>();
             let (partitioning_actor, unique_reg_f) = systems[0].create_and_register(|| {
                 PartitioningActor::with(
                     prepare_latch.clone(),
