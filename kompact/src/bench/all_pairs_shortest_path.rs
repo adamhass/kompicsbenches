@@ -817,16 +817,28 @@ pub mod component_apsp {
         }
     }
 
-    ignore_lifecycle!(BlockActor);
+    impl ComponentLifecycle for BlockActor {
+        fn on_start(&mut self) -> Handled {
+            debug!(
+                self.ctx.log(),
+                "Got Start at block_id={}.",
+                self.current_data.block_id()
+            );
+            self.notify_neighbours();
+            Handled::Ok
+        }
+    }
 
     impl Require<ManagerPort> for BlockActor {
         fn handle(&mut self, _event: Never) -> Handled {
-            unimplemented!()
+            // ignore
+            Handled::Ok
         }
     }
     impl Provide<BlockPort> for BlockActor {
         fn handle(&mut self, _event: Never) -> Handled {
-            unimplemented!()
+            // ignore
+            Handled::Ok
         }
     }
     impl Require<BlockPort> for BlockActor {

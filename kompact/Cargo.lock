@@ -124,9 +124,9 @@ dependencies = [
 
 [[package]]
 name = "async-io"
-version = "1.1.4"
+version = "1.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33be191d05a54ec120e4667375e2ad49fe506b846463df384460ab801c7ae5dc"
+checksum = "6e727cebd055ab2861a854f79def078c4b99ea722d54c6800a0e274389882d4c"
 dependencies = [
  "concurrent-queue",
  "fastrand",
@@ -219,9 +219,9 @@ checksum = "cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a"
 
 [[package]]
 name = "backtrace"
-version = "0.3.50"
+version = "0.3.51"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "46254cf2fdcdf1badb5934448c1bcbe046a56537b3987d96c51a7afc5d03f293"
+checksum = "ec1931848a574faa8f7c71a12ea00453ff5effbb5f51afe7f77d7a48cace6ac1"
 dependencies = [
  "addr2line",
  "cfg-if",
@@ -987,6 +987,7 @@ dependencies = [
 [[package]]
 name = "kompact"
 version = "0.10.0"
+source = "git+https://github.com/kompics/kompact#248f5e1679407b4abfec18ec7d546e901f9b7613"
 dependencies = [
  "arc-swap",
  "as_num",
@@ -1005,7 +1006,7 @@ dependencies = [
  "kompact-actor-derive",
  "kompact-component-derive",
  "log 0.4.11",
- "mio 0.7.0",
+ "mio 0.7.1",
  "num_cpus",
  "oncemutex",
  "owning_ref",
@@ -1023,6 +1024,7 @@ dependencies = [
 [[package]]
 name = "kompact-actor-derive"
 version = "0.10.0"
+source = "git+https://github.com/kompics/kompact#248f5e1679407b4abfec18ec7d546e901f9b7613"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1032,6 +1034,7 @@ dependencies = [
 [[package]]
 name = "kompact-component-derive"
 version = "0.10.0"
+source = "git+https://github.com/kompics/kompact#248f5e1679407b4abfec18ec7d546e901f9b7613"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1168,11 +1171,10 @@ dependencies = [
 
 [[package]]
 name = "mio"
-version = "0.7.0"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6e9971bc8349a361217a8f2a41f5d011274686bd4436465ba51730921039d7fb"
+checksum = "d1bb17be6a300845baad6dc2062a31de575e9148696df52f040aea6398627350"
 dependencies = [
- "lazy_static",
  "libc",
  "log 0.4.11",
  "miow 0.3.5",
@@ -1215,9 +1217,9 @@ dependencies = [
 
 [[package]]
 name = "nb-connect"
-version = "1.0.0"
+version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e847c76b390f44529c2071ef06d0b52fbb4bdb04cc8987a5cfa63954c000abca"
+checksum = "701f47aeb98466d0a7fea67e2c2f667c33efa1f2e4fd7f76743aac1153196f72"
 dependencies = [
  "libc",
  "winapi 0.3.9",
