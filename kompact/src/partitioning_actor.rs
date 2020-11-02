@@ -134,6 +134,7 @@ pub struct Done;
 #[derive(Clone, Debug)]
 pub struct TestDone(pub Vec<KVTimestamp>);
 
+#[derive(Clone)]
 pub struct PartitioningActorSer;
 pub const PARTITIONING_ACTOR_SER: PartitioningActorSer = PartitioningActorSer {};
 const INIT_ID: i8 = 1;
