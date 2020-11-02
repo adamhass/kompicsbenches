@@ -1,13 +1,13 @@
 [package]
 name = "kompact_benchmarks"
 version = "0.1.0"
-authors = ["Lars Kroll <lkroll@kth.se>", "Harald Ng <hng@kth.se>"]
+authors = ["Lars Kroll <lkroll@kth.se>"]
 edition = "2018"
 
 [dependencies]
-kompact 				= { git = "https://github.com/kompics/kompact"}
-#kompact 				= { git = "https://github.com/kompics/kompact", rev = "0f9abc3" }
-#kompact 				= { path = "../../kompact/core/" }
+#kompact 				= { git = "https://github.com/kompics/kompact"}
+kompact 				= { path = "../../kompact/core/" }
+#kompact 				= "0.8"
 benchmark_suite_shared 	= { path = "../shared_rust/" }
 protobuf        		= "2"
 futures         		= "0.1"
@@ -21,27 +21,16 @@ num_cpus 				= "1"
 parse_duration 			= "2"
 rand 					= {version = "0.7", features = ["small_rng"]}
 chrono                  = "0.4"
-raft                    = "0.6.0-alpha"
-uuid                    = { version = "0.8", features = ["v4"] }
-memmap                  = "0.7.0"
-hashbrown               = "0.8.0"
-indexmap                = "1.4.0"
-hdrhistogram            = "6.0"
-hocon 					= {version = "0.3.6", default-features = false}
-quanta                  = {version = "0.6.5", optional = true}
-leaderpaxos             = { git = "https://github.com/haraldng/leaderpaxos", features = ["batch_accept"] }
+
+#[dependencies.kompact]
+#git = "https://github.com/adamhass/kompact"
+#branch = "master"
+#default-features = false
+#features = ["ser_id_8", "silent_logging"]
+#version = "0.10"
 
 [dev-dependencies]
 uuid = { version = "0.8", features = ["v4"] }
 
 [features]
 travis_ci = ["slog/max_level_info", "slog/release_max_level_info"]
-
-track_timeouts = [] # client keep tracks of which proposals timed out
-track_latency = [] # measure latency for proposals
-track_timestamps = ["quanta"]
-
-#default = []
-
-[profile.release]
-lto = true
