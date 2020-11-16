@@ -1032,6 +1032,273 @@ impl ::protobuf::reflect::ProtobufValue for StreamingWindowsRequest {
 }
 
 #[derive(PartialEq,Clone,Default)]
+pub struct SizedThroughputRequest {
+    // message fields
+    pub message_size: u64,
+    pub batch_size: u64,
+    pub number_of_batches: u64,
+    pub number_of_pairs: u64,
+    // special fields
+    pub unknown_fields: ::protobuf::UnknownFields,
+    pub cached_size: ::protobuf::CachedSize,
+}
+
+impl<'a> ::std::default::Default for &'a SizedThroughputRequest {
+    fn default() -> &'a SizedThroughputRequest {
+        <SizedThroughputRequest as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl SizedThroughputRequest {
+    pub fn new() -> SizedThroughputRequest {
+        ::std::default::Default::default()
+    }
+
+    // uint64 message_size = 1;
+
+
+    pub fn get_message_size(&self) -> u64 {
+        self.message_size
+    }
+    pub fn clear_message_size(&mut self) {
+        self.message_size = 0;
+    }
+
+    // Param is passed by value, moved
+    pub fn set_message_size(&mut self, v: u64) {
+        self.message_size = v;
+    }
+
+    // uint64 batch_size = 2;
+
+
+    pub fn get_batch_size(&self) -> u64 {
+        self.batch_size
+    }
+    pub fn clear_batch_size(&mut self) {
+        self.batch_size = 0;
+    }
+
+    // Param is passed by value, moved
+    pub fn set_batch_size(&mut self, v: u64) {
+        self.batch_size = v;
+    }
+
+    // uint64 number_of_batches = 3;
+
+
+    pub fn get_number_of_batches(&self) -> u64 {
+        self.number_of_batches
+    }
+    pub fn clear_number_of_batches(&mut self) {
+        self.number_of_batches = 0;
+    }
+
+    // Param is passed by value, moved
+    pub fn set_number_of_batches(&mut self, v: u64) {
+        self.number_of_batches = v;
+    }
+
+    // uint64 number_of_pairs = 4;
+
+
+    pub fn get_number_of_pairs(&self) -> u64 {
+        self.number_of_pairs
+    }
+    pub fn clear_number_of_pairs(&mut self) {
+        self.number_of_pairs = 0;
+    }
+
+    // Param is passed by value, moved
+    pub fn set_number_of_pairs(&mut self, v: u64) {
+        self.number_of_pairs = v;
+    }
+}
+
+impl ::protobuf::Message for SizedThroughputRequest {
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::ProtobufResult<()> {
+        while !is.eof()? {
+            let (field_number, wire_type) = is.read_tag_unpack()?;
+            match field_number {
+                1 => {
+                    if wire_type != ::protobuf::wire_format::WireTypeVarint {
+                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
+                    }
+                    let tmp = is.read_uint64()?;
+                    self.message_size = tmp;
+                },
+                2 => {
+                    if wire_type != ::protobuf::wire_format::WireTypeVarint {
+                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
+                    }
+                    let tmp = is.read_uint64()?;
+                    self.batch_size = tmp;
+                },
+                3 => {
+                    if wire_type != ::protobuf::wire_format::WireTypeVarint {
+                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
+                    }
+                    let tmp = is.read_uint64()?;
+                    self.number_of_batches = tmp;
+                },
+                4 => {
+                    if wire_type != ::protobuf::wire_format::WireTypeVarint {
+                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
+                    }
+                    let tmp = is.read_uint64()?;
+                    self.number_of_pairs = tmp;
+                },
+                _ => {
+                    ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u32 {
+        let mut my_size = 0;
+        if self.message_size != 0 {
+            my_size += ::protobuf::rt::value_size(1, self.message_size, ::protobuf::wire_format::WireTypeVarint);
+        }
+        if self.batch_size != 0 {
+            my_size += ::protobuf::rt::value_size(2, self.batch_size, ::protobuf::wire_format::WireTypeVarint);
+        }
+        if self.number_of_batches != 0 {
+            my_size += ::protobuf::rt::value_size(3, self.number_of_batches, ::protobuf::wire_format::WireTypeVarint);
+        }
+        if self.number_of_pairs != 0 {
+            my_size += ::protobuf::rt::value_size(4, self.number_of_pairs, ::protobuf::wire_format::WireTypeVarint);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
+        self.cached_size.set(my_size);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::ProtobufResult<()> {
+        if self.message_size != 0 {
+            os.write_uint64(1, self.message_size)?;
+        }
+        if self.batch_size != 0 {
+            os.write_uint64(2, self.batch_size)?;
+        }
+        if self.number_of_batches != 0 {
+            os.write_uint64(3, self.number_of_batches)?;
+        }
+        if self.number_of_pairs != 0 {
+            os.write_uint64(4, self.number_of_pairs)?;
+        }
+        os.write_unknown_fields(self.get_unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn get_cached_size(&self) -> u32 {
+        self.cached_size.get()
+    }
+
+    fn get_unknown_fields(&self) -> &::protobuf::UnknownFields {
+        &self.unknown_fields
+    }
+
+    fn mut_unknown_fields(&mut self) -> &mut ::protobuf::UnknownFields {
+        &mut self.unknown_fields
+    }
+
+    fn as_any(&self) -> &dyn (::std::any::Any) {
+        self as &dyn (::std::any::Any)
+    }
+    fn as_any_mut(&mut self) -> &mut dyn (::std::any::Any) {
+        self as &mut dyn (::std::any::Any)
+    }
+    fn into_any(self: Box<Self>) -> ::std::boxed::Box<dyn (::std::any::Any)> {
+        self
+    }
+
+    fn descriptor(&self) -> &'static ::protobuf::reflect::MessageDescriptor {
+        Self::descriptor_static()
+    }
+
+    fn new() -> SizedThroughputRequest {
+        SizedThroughputRequest::new()
+    }
+
+    fn descriptor_static() -> &'static ::protobuf::reflect::MessageDescriptor {
+        static mut descriptor: ::protobuf::lazy::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::lazy::Lazy {
+            lock: ::protobuf::lazy::ONCE_INIT,
+            ptr: 0 as *const ::protobuf::reflect::MessageDescriptor,
+        };
+        unsafe {
+            descriptor.get(|| {
+                let mut fields = ::std::vec::Vec::new();
+                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeUint64>(
+                    "message_size",
+                    |m: &SizedThroughputRequest| { &m.message_size },
+                    |m: &mut SizedThroughputRequest| { &mut m.message_size },
+                ));
+                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeUint64>(
+                    "batch_size",
+                    |m: &SizedThroughputRequest| { &m.batch_size },
+                    |m: &mut SizedThroughputRequest| { &mut m.batch_size },
+                ));
+                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeUint64>(
+                    "number_of_batches",
+                    |m: &SizedThroughputRequest| { &m.number_of_batches },
+                    |m: &mut SizedThroughputRequest| { &mut m.number_of_batches },
+                ));
+                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeUint64>(
+                    "number_of_pairs",
+                    |m: &SizedThroughputRequest| { &m.number_of_pairs },
+                    |m: &mut SizedThroughputRequest| { &mut m.number_of_pairs },
+                ));
+                ::protobuf::reflect::MessageDescriptor::new::<SizedThroughputRequest>(
+                    "SizedThroughputRequest",
+                    fields,
+                    file_descriptor_proto()
+                )
+            })
+        }
+    }
+
+    fn default_instance() -> &'static SizedThroughputRequest {
+        static mut instance: ::protobuf::lazy::Lazy<SizedThroughputRequest> = ::protobuf::lazy::Lazy {
+            lock: ::protobuf::lazy::ONCE_INIT,
+            ptr: 0 as *const SizedThroughputRequest,
+        };
+        unsafe {
+            instance.get(SizedThroughputRequest::new)
+        }
+    }
+}
+
+impl ::protobuf::Clear for SizedThroughputRequest {
+    fn clear(&mut self) {
+        self.message_size = 0;
+        self.batch_size = 0;
+        self.number_of_batches = 0;
+        self.number_of_pairs = 0;
+        self.unknown_fields.clear();
+    }
+}
+
+impl ::std::fmt::Debug for SizedThroughputRequest {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for SizedThroughputRequest {
+    fn as_ref(&self) -> ::protobuf::reflect::ProtobufValueRef {
+        ::protobuf::reflect::ProtobufValueRef::Message(self)
+    }
+}
+
+#[derive(PartialEq,Clone,Default)]
 pub struct FibonacciRequest {
     // message fields
     pub fib_number: u32,
@@ -1603,25 +1870,29 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \nbatch_size\x18\x02\x20\x01(\x04R\tbatchSize\x12\x1f\n\x0bwindow_size\
     \x18\x03\x20\x01(\tR\nwindowSize\x12*\n\x11number_of_windows\x18\x04\x20\
     \x01(\x04R\x0fnumberOfWindows\x12:\n\x19window_size_amplification\x18\
-    \x05\x20\x01(\x04R\x17windowSizeAmplification\"1\n\x10FibonacciRequest\
-    \x12\x1d\n\nfib_number\x18\x01\x20\x01(\rR\tfibNumber\"p\n\x10ChameneosR\
-    equest\x12.\n\x13number_of_chameneos\x18\x01\x20\x01(\rR\x11numberOfCham\
-    eneos\x12,\n\x12number_of_meetings\x18\x02\x20\x01(\x04R\x10numberOfMeet\
-    ings\"T\n\x0bAPSPRequest\x12&\n\x0fnumber_of_nodes\x18\x01\x20\x01(\rR\r\
-    numberOfNodes\x12\x1d\n\nblock_size\x18\x02\x20\x01(\rR\tblockSize2\xe0\
-    \x07\n\x0fBenchmarkRunner\x12L\n\x05Ready\x12\x20.kompics.benchmarks.Rea\
-    dyRequest\x1a!.kompics.benchmarks.ReadyResponse\x12P\n\x08Shutdown\x12#.\
-    kompics.benchmarks.ShutdownRequest\x1a\x1f.kompics.benchmarks.ShutdownAc\
-    k\x12O\n\x08PingPong\x12#.kompics.benchmarks.PingPongRequest\x1a\x1e.kom\
-    pics.benchmarks.TestResult\x12R\n\x0bNetPingPong\x12#.kompics.benchmarks\
-    .PingPongRequest\x1a\x1e.kompics.benchmarks.TestResult\x12c\n\x12Through\
-    putPingPong\x12-.kompics.benchmarks.ThroughputPingPongRequest\x1a\x1e.ko\
-    mpics.benchmarks.TestResult\x12f\n\x15NetThroughputPingPong\x12-.kompics\
-    .benchmarks.ThroughputPingPongRequest\x1a\x1e.kompics.benchmarks.TestRes\
-    ult\x12[\n\x0eAtomicRegister\x12).kompics.benchmarks.AtomicRegisterReque\
-    st\x1a\x1e.kompics.benchmarks.TestResult\x12_\n\x10StreamingWindows\x12+\
-    .kompics.benchmarks.StreamingWindowsRequest\x1a\x1e.kompics.benchmarks.T\
-    estResult\x12Q\n\tFibonacci\x12$.kompics.benchmarks.FibonacciRequest\x1a\
+    \x05\x20\x01(\x04R\x17windowSizeAmplification\"\xae\x01\n\x16SizedThroug\
+    hputRequest\x12!\n\x0cmessage_size\x18\x01\x20\x01(\x04R\x0bmessageSize\
+    \x12\x1d\n\nbatch_size\x18\x02\x20\x01(\x04R\tbatchSize\x12*\n\x11number\
+    _of_batches\x18\x03\x20\x01(\x04R\x0fnumberOfBatches\x12&\n\x0fnumber_of\
+    _pairs\x18\x04\x20\x01(\x04R\rnumberOfPairs\"1\n\x10FibonacciRequest\x12\
+    \x1d\n\nfib_number\x18\x01\x20\x01(\rR\tfibNumber\"p\n\x10ChameneosReque\
+    st\x12.\n\x13number_of_chameneos\x18\x01\x20\x01(\rR\x11numberOfChameneo\
+    s\x12,\n\x12number_of_meetings\x18\x02\x20\x01(\x04R\x10numberOfMeetings\
+    \"T\n\x0bAPSPRequest\x12&\n\x0fnumber_of_nodes\x18\x01\x20\x01(\rR\rnumb\
+    erOfNodes\x12\x1d\n\nblock_size\x18\x02\x20\x01(\rR\tblockSize2\xe0\x07\
+    \n\x0fBenchmarkRunner\x12L\n\x05Ready\x12\x20.kompics.benchmarks.ReadyRe\
+    quest\x1a!.kompics.benchmarks.ReadyResponse\x12P\n\x08Shutdown\x12#.komp\
+    ics.benchmarks.ShutdownRequest\x1a\x1f.kompics.benchmarks.ShutdownAck\
+    \x12O\n\x08PingPong\x12#.kompics.benchmarks.PingPongRequest\x1a\x1e.komp\
+    ics.benchmarks.TestResult\x12R\n\x0bNetPingPong\x12#.kompics.benchmarks.\
+    PingPongRequest\x1a\x1e.kompics.benchmarks.TestResult\x12c\n\x12Throughp\
+    utPingPong\x12-.kompics.benchmarks.ThroughputPingPongRequest\x1a\x1e.kom\
+    pics.benchmarks.TestResult\x12f\n\x15NetThroughputPingPong\x12-.kompics.\
+    benchmarks.ThroughputPingPongRequest\x1a\x1e.kompics.benchmarks.TestResu\
+    lt\x12[\n\x0eAtomicRegister\x12).kompics.benchmarks.AtomicRegisterReques\
+    t\x1a\x1e.kompics.benchmarks.TestResult\x12_\n\x10StreamingWindows\x12+.\
+    kompics.benchmarks.StreamingWindowsRequest\x1a\x1e.kompics.benchmarks.Te\
+    stResult\x12Q\n\tFibonacci\x12$.kompics.benchmarks.FibonacciRequest\x1a\
     \x1e.kompics.benchmarks.TestResult\x12Q\n\tChameneos\x12$.kompics.benchm\
     arks.ChameneosRequest\x1a\x1e.kompics.benchmarks.TestResult\x12W\n\x14Al\
     lPairsShortestPath\x12\x1f.kompics.benchmarks.APSPRequest\x1a\x1e.kompic\

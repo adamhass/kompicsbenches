@@ -42,6 +42,13 @@ message StreamingWindowsRequest {
 	uint64 window_size_amplification = 5;
 }
 
+message SizedThroughputRequest {
+	uint64 message_size = 1;
+	uint64 batch_size = 2;
+	uint64 number_of_batches = 3;
+	uint64 number_of_pairs = 4;
+}
+
 message FibonacciRequest {
 	uint32 fib_number = 1;
 }
