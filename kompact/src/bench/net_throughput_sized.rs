@@ -1,6 +1,7 @@
 use super::*;
 
 use crate::bench::messages::SizedThroughputMessage;
+use benchmark_suite_shared::kompics_benchmarks::benchmarks::SizedThroughputRequest;
 use kompact::prelude::*;
 use std::fmt::Debug;
 use std::str::FromStr;
@@ -8,38 +9,14 @@ use std::sync::Arc;
 use std::time::Duration;
 use synchronoise::CountdownEvent;
 
-#[derive(Clone, Copy)]
-pub struct SizedThroughputParameters {
-    message_size: u64,
-    batch_size: u64,
-    number_of_batches: u64,
-    number_of_pairs: u64,
-}
-
-impl SizedThroughputParameters {
-    fn new(
-        message_size: u64,
-        batch_size: u64,
-        number_of_batches: u64,
-        number_of_pairs: u64,
-    ) -> SizedThroughputParameters {
-        SizedThroughputParameters {
-            message_size,
-            batch_size,
-            number_of_batches,
-            number_of_pairs,
-        }
-    }
-}
-
 pub struct SizedRefs(Vec<ActorPath>);
 
 #[derive(Default)]
 pub struct SizedThroughputBenchmark;
 
 impl DistributedBenchmark for SizedThroughputBenchmark {
-    type MasterConf = SizedThroughputParameters;
-    type ClientConf = SizedThroughputParameters;
+    type MasterConf = SizedThroughputRequest;
+    type ClientConf = SizedThroughputRequest;
     type ClientData = SizedRefs;
 
     type Master = SizedThroughputMaster;
@@ -54,7 +31,7 @@ impl DistributedBenchmark for SizedThroughputBenchmark {
     fn msg_to_master_conf(
         msg: Box<dyn (::protobuf::Message)>,
     ) -> Result<Self::MasterConf, BenchmarkError> {
-        downcast_msg!(msg; SizedThroughputParameters)
+        downcast_msg!(msg; SizedThroughputRequest)
     }
 
     fn new_client() -> Self::Client {
@@ -96,12 +73,13 @@ impl DistributedBenchmark for SizedThroughputBenchmark {
                     str, e
                 ))
             })?;
-            Ok(SizedThroughputParameters::new(
-                message_size,
-                batch_size,
-                number_of_batches,
-                number_of_pairs,
-            ))
+            let mut client_conf = SizedThroughputRequest::new();
+            client_conf.set_message_size(message_size);
+            client_conf.set_batch_size(batch_size);
+            client_conf.set_number_of_batches(number_of_batches);
+            client_conf.set_number_of_pairs(number_of_pairs);
+
+            Ok(client_conf)
         }
     }
 
@@ -130,7 +108,7 @@ const REG_TIMEOUT: Duration = Duration::from_secs(6);
 const FLUSH_TIMEOUT: Duration = Duration::from_secs(60);
 
 pub struct SizedThroughputMaster {
-    params: Option<SizedThroughputParameters>,
+    params: Option<SizedThroughputRequest>,
     system: Option<KompactSystem>,
     latch: Option<Arc<CountdownEvent>>,
     sources: Vec<(u64, Arc<Component<SizedThroughputSource>>)>,
@@ -152,9 +130,9 @@ impl SizedThroughputMaster {
 }
 
 impl DistributedBenchmarkMaster for SizedThroughputMaster {
-    type MasterConf = SizedThroughputParameters;
+    type MasterConf = SizedThroughputRequest;
     type ClientData = SizedRefs;
-    type ClientConf = SizedThroughputParameters;
+    type ClientConf = SizedThroughputRequest;
 
     fn setup(
         &mut self,
@@ -163,11 +141,20 @@ impl DistributedBenchmarkMaster for SizedThroughputMaster {
     ) -> Result<Self::ClientConf, BenchmarkError> {
         let system = crate::kompact_system_provider::global().new_remote_system("SizedThroughput");
 
-        let latch = Arc::new(CountdownEvent::new(c.number_of_pairs as usize));
+        let latch = Arc::new(CountdownEvent::new(c.get_number_of_pairs() as usize));
+
+        let client_conf = c.clone();
+        let params = c.clone();
 
         for pid in 0..c.number_of_pairs {
-            let (source, req_f) =
-                system.create_and_register(|| SizedThroughputSource::with(c, latch.clone()));
+            let (source, req_f) = system.create_and_register(|| {
+                SizedThroughputSource::with(
+                    c.get_message_size(),
+                    c.get_batch_size(),
+                    c.get_number_of_batches(),
+                    latch.clone(),
+                )
+            });
             // let source_path = req_f.wait_expect(REG_TIMEOUT, "Source failed to register!");
             system
                 .start_notify(&source)
@@ -178,8 +165,8 @@ impl DistributedBenchmarkMaster for SizedThroughputMaster {
         }
         self.latch = Some(latch);
         self.system = Some(system);
-        self.params = Some(c);
-        Ok(c)
+        self.params = Some(params);
+        Ok(client_conf)
     }
 
     fn prepare_iteration(&mut self, mut d: Vec<Self::ClientData>) -> () {
@@ -253,7 +240,7 @@ impl SizedThroughputClient {
 }
 
 impl DistributedBenchmarkClient for SizedThroughputClient {
-    type ClientConf = SizedThroughputParameters;
+    type ClientConf = SizedThroughputRequest;
     type ClientData = SizedRefs;
 
     fn setup(&mut self, c: Self::ClientConf) -> Self::ClientData {
@@ -318,16 +305,18 @@ pub struct SizedThroughputSource {
 
 impl SizedThroughputSource {
     pub fn with(
-        params: SizedThroughputParameters,
+        message_size: u64,
+        batch_size: u64,
+        number_of_batches: u64,
         latch: Arc<CountdownEvent>,
     ) -> SizedThroughputSource {
         SizedThroughputSource {
             ctx: ComponentContext::uninitialised(),
             latch,
             downstream: None,
-            message_size: params.message_size,
-            batch_size: params.batch_size,
-            number_of_batches: params.number_of_batches,
+            message_size,
+            batch_size,
+            number_of_batches,
             current_batch: 0,
         }
     }
