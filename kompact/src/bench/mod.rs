@@ -8,6 +8,7 @@ pub mod chameneos;
 pub mod fibonacci;
 mod messages;
 pub mod net_throughput_pingpong;
+pub mod net_throughput_sized;
 pub mod netpingpong;
 pub mod pingpong;
 pub mod streaming_windows;
