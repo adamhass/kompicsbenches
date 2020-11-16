@@ -1,5 +1,6 @@
 use crate::serialiser_ids;
 use kompact::prelude::*;
+use std::fmt::{Debug, Formatter};
 
 #[derive(Debug)]
 pub struct Run;
@@ -169,5 +170,59 @@ impl Deserialiser<Pong> for Pong {
     fn deserialise(buf: &mut dyn Buf) -> Result<Pong, SerError> {
         let index = buf.get_u64();
         Ok(Pong::new(index))
+    }
+}
+
+#[derive(Clone)]
+pub struct SizedThroughputMessage {
+    data: Vec<u8>,
+}
+
+impl SizedThroughputMessage {
+    const SERID: SerId = serialiser_ids::STP_MESSAGE_ID;
+
+    pub fn new(size: usize) -> Self {
+        let data = vec![0u8; size];
+        SizedThroughputMessage { data }
+    }
+}
+
+impl Debug for SizedThroughputMessage {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("BigPingMsg")
+            .field("data length", &self.data.len())
+            .finish()
+    }
+}
+
+impl Serialisable for SizedThroughputMessage {
+    fn ser_id(&self) -> SerId {
+        Self::SERID
+    }
+    fn size_hint(&self) -> Option<usize> {
+        Some(self.data.len() + 4)
+    }
+    fn serialise(&self, buf: &mut dyn BufMut) -> Result<(), SerError> {
+        buf.put_u32(self.data.len() as u32);
+        buf.put_slice(self.data.as_slice());
+        Ok(())
+    }
+
+    fn local(self: Box<Self>) -> Result<Box<dyn Any + Send>, Box<dyn Serialisable>> {
+        Ok(self)
+    }
+}
+
+impl Deserialiser<SizedThroughputMessage> for SizedThroughputMessage {
+    const SER_ID: SerId = Self::SERID;
+    fn deserialise(buf: &mut dyn Buf) -> Result<SizedThroughputMessage, SerError> {
+        let data_len = buf.get_u32();
+        let mut data = Vec::<u8>::with_capacity(data_len as usize);
+        if buf.remaining() == buf.bytes().len() {
+            data.extend_from_slice(buf.bytes());
+        } else {
+            data.extend_from_slice(buf.to_bytes().bytes());
+        }
+        Ok(Self { data })
     }
 }

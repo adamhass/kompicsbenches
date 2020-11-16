@@ -83,6 +83,7 @@ kompics_rust/src/kompics_benchmark/benchmarks_grpc.rs
 
 # IntelliJ
 *.iml
+project/
 
 # Erlang
 .eunit
