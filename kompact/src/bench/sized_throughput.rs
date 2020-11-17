@@ -110,7 +110,6 @@ const FLUSH_TIMEOUT: Duration = Duration::from_secs(60);
 pub struct SizedThroughputMaster {
     params: Option<SizedThroughputRequest>,
     system: Option<KompactSystem>,
-    latch: Option<Arc<CountdownEvent>>,
     sources: Vec<(u64, Arc<Component<SizedThroughputSource>>)>,
     //sinks: Vec<Arc<Component<SizedThroughputSink>>>,
     source_refs: Vec<ActorRef<SourceMsg>>,
@@ -121,7 +120,6 @@ impl SizedThroughputMaster {
         SizedThroughputMaster {
             params: None,
             system: None,
-            latch: None,
             sources: Vec::new(),
             // sinks: Vec::new(),
             source_refs: Vec::new(),
@@ -131,8 +129,8 @@ impl SizedThroughputMaster {
 
 impl DistributedBenchmarkMaster for SizedThroughputMaster {
     type MasterConf = SizedThroughputRequest;
-    type ClientData = SizedRefs;
     type ClientConf = SizedThroughputRequest;
+    type ClientData = SizedRefs;
 
     fn setup(
         &mut self,
@@ -140,9 +138,6 @@ impl DistributedBenchmarkMaster for SizedThroughputMaster {
         _m: &DeploymentMetaData,
     ) -> Result<Self::ClientConf, BenchmarkError> {
         let system = crate::kompact_system_provider::global().new_remote_system("SizedThroughput");
-
-        let latch = Arc::new(CountdownEvent::new(c.get_number_of_pairs() as usize));
-
         let client_conf = c.clone();
         let params = c.clone();
 
@@ -152,10 +147,9 @@ impl DistributedBenchmarkMaster for SizedThroughputMaster {
                     c.get_message_size(),
                     c.get_batch_size(),
                     c.get_number_of_batches(),
-                    latch.clone(),
                 )
             });
-            // let source_path = req_f.wait_expect(REG_TIMEOUT, "Source failed to register!");
+            let _ = req_f.wait_expect(REG_TIMEOUT, "Source failed to register!");
             system
                 .start_notify(&source)
                 .wait_timeout(REG_TIMEOUT)
@@ -163,7 +157,6 @@ impl DistributedBenchmarkMaster for SizedThroughputMaster {
             self.source_refs.push(source.actor_ref().clone());
             self.sources.push((pid, source));
         }
-        self.latch = Some(latch);
         self.system = Some(system);
         self.params = Some(params);
         Ok(client_conf)
@@ -176,27 +169,23 @@ impl DistributedBenchmarkMaster for SizedThroughputMaster {
             self.source_refs.len(),
             "Same amount of sinks as sources"
         );
+        let latch = Arc::new(CountdownEvent::new(self.source_refs.len()));
         for source in &self.source_refs {
             // Tell all the sources who their target is
-            source.tell(SourceMsg::Target(sinks.pop().unwrap()));
+            source.tell(SourceMsg::Prepare(sinks.pop().unwrap(), Some(latch.clone())));
         }
         // The sources will send a prepare message to the sink and then decrement the latch
         // When they receive the Ack
         // This way all the networking and buffers are allocated and ready for usage when we
         // run the iteration.
-        if let Some(latch) = &mut self.latch {
-            latch.wait_timeout(FLUSH_TIMEOUT);
-            if let Some(l) = Arc::get_mut(latch) {
-                l.reset();
-            }
-        }
+        latch.wait_timeout(FLUSH_TIMEOUT);
     }
 
     fn run_iteration(&mut self) -> () {
         if let Some(ref _system) = self.system {
-            let latch = self.latch.take().unwrap();
+            let latch = Arc::new(CountdownEvent::new(self.source_refs.len()));
             self.source_refs.iter().for_each(|source_ref| {
-                source_ref.tell(SourceMsg::Run);
+                source_ref.tell(SourceMsg::Run(Some(latch.clone())));
             });
             latch.wait();
         } else {
@@ -207,15 +196,9 @@ impl DistributedBenchmarkMaster for SizedThroughputMaster {
         if last_iteration {
             println!("Cleaning up sinks for SizedThroughput, last iteration");
             if let Some(system) = self.system.take() {
-                let mut kill_futures = Vec::new();
                 for (_, source) in self.sources.drain(..) {
-                    let kf = system.kill_notify(source);
-                    kill_futures.push(kf);
-                }
-                for kf in kill_futures {
-                    kf.wait_timeout(Duration::from_millis(1000))
-                        .expect("Source Actor never died!");
-                }
+                    system.kill(source);
+                 }
                 system
                     .shutdown()
                     .expect("Kompact didn't shut down properly");
@@ -295,7 +278,7 @@ impl DistributedBenchmarkClient for SizedThroughputClient {
 #[derive(ComponentDefinition)]
 pub struct SizedThroughputSource {
     ctx: ComponentContext<Self>,
-    latch: Arc<CountdownEvent>,
+    latch: Option<Arc<CountdownEvent>>,
     downstream: Option<ActorPath>,
     message_size: u64,
     batch_size: u64,
@@ -308,11 +291,10 @@ impl SizedThroughputSource {
         message_size: u64,
         batch_size: u64,
         number_of_batches: u64,
-        latch: Arc<CountdownEvent>,
     ) -> SizedThroughputSource {
         SizedThroughputSource {
             ctx: ComponentContext::uninitialised(),
-            latch,
+            latch: None,
             downstream: None,
             message_size,
             batch_size,
@@ -345,27 +327,31 @@ impl NetworkActor for SizedThroughputSource {
                 self.current_batch += 1;
                 if self.current_batch >= self.number_of_batches {
                     // Finished
-                    self.latch.decrement().expect("Decrement Latch");
+                    self.latch.as_ref().expect("Should have a latch")
+                        .decrement().expect("Should decrement");
                 } else {
                     // Send the next batch
                     self.send();
                 }
             }
-            SourceMsg::Run => {
+            SourceMsg::Run(latch) => {
+                self.latch = latch;
                 // We start the experiment, set current_batch to 0
                 self.current_batch = 0;
                 self.send();
             }
-            SourceMsg::Target(path) => {
+            SourceMsg::Prepare(path, latch) => {
                 // Make target prepare for receiving the batch_size
                 path.tell_serialised(SinkMsg::Prepare(self.batch_size), self)
                     .expect("serialise");
                 self.downstream = Some(path);
+                self.latch = latch;
             }
             SourceMsg::Ready => {
                 // Ready received from the Sink
                 // Decrement the latch and wait for Run message before we start.
-                let _ = self.latch.decrement();
+                self.latch.as_ref().expect("Should have a latch")
+                    .decrement().expect("Should decrement");
             }
         }
         Handled::Ok
@@ -422,10 +408,10 @@ impl NetworkActor for SizedThroughputSink {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub enum SourceMsg {
-    Run,
-    Target(ActorPath),
+    Run(Option<Arc<CountdownEvent>>),
+    Prepare(ActorPath, Option<Arc<CountdownEvent>>),
     Ack,
     Ready,
 }
@@ -438,21 +424,32 @@ impl SourceMsg {
     const READY_FLAG: u8 = 4u8;
 }
 
+impl ::std::fmt::Debug for SourceMsg {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        f.write_str("SourceMsg::");
+        match self {
+            Self::Run(_) => f.write_str("Run"),
+            Self::Prepare(_, _) => f.write_str("Prepare"),
+            Self::Ack => f.write_str("Ack"),
+            Self::Ready => f.write_str("Ready"),
+        }
+    }
+}
 impl Serialisable for SourceMsg {
     fn ser_id(&self) -> SerId {
         Self::SERID
     }
     fn size_hint(&self) -> Option<usize> {
         match self {
-            SourceMsg::Run => None, // don't serialise
+            SourceMsg::Run(_) => None, // don't serialise
             SourceMsg::Ack => None,
             SourceMsg::Ready => None,
-            SourceMsg::Target(path) => path.size_hint(),
+            SourceMsg::Prepare(path, _) => path.size_hint(),
         }
     }
     fn serialise(&self, buf: &mut dyn BufMut) -> Result<(), SerError> {
         match self {
-            SourceMsg::Run => {
+            SourceMsg::Run(_) => {
                 buf.put_u8(Self::RUN_FLAG);
             }
             SourceMsg::Ack => {
@@ -461,7 +458,7 @@ impl Serialisable for SourceMsg {
             SourceMsg::Ready => {
                 buf.put_u8(Self::READY_FLAG);
             }
-            SourceMsg::Target(path) => {
+            SourceMsg::Prepare(path, _) => {
                 buf.put_u8(Self::TARGET_FLAG);
                 path.serialise(buf)?;
             }
@@ -478,9 +475,9 @@ impl Deserialiser<SourceMsg> for SourceMsg {
     fn deserialise(buf: &mut dyn Buf) -> Result<SourceMsg, SerError> {
         match buf.get_u8() {
             Self::ACK_FLAG => Ok(Self::Ack),
-            Self::RUN_FLAG => Ok(Self::Run),
+            Self::RUN_FLAG => Ok(Self::Run(None)),
             Self::READY_FLAG => Ok(Self::Ready),
-            Self::TARGET_FLAG => Ok(Self::Target(ActorPath::deserialise(buf)?)),
+            Self::TARGET_FLAG => Ok(Self::Prepare(ActorPath::deserialise(buf)?, None)),
             _ => unimplemented!(),
         }
     }

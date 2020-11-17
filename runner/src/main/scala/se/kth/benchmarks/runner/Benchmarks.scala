@@ -120,6 +120,26 @@ object Benchmarks extends ParameterDescriptionImplicits {
       }
   );
 
+  val netThroughputSized = Benchmark(
+    name = "Net Throughput Sized",
+    symbol = "NETTPSIZED",
+    invoke = (stub, request: SizedThroughputRequest) => {
+      stub.netThroughputSized(request)
+    },
+    space = ParameterSpacePB
+      .cross(List(100,1000,10000), List(100,1000), List(4, 16, 64), List(4, 16, 32))
+      .msg[ThroughputPingPongRequest] {
+        case (msize, bsize, bcount, pairs) =>
+          SizedThroughputRequest(messageSize = msize, batchSize = bsize, numberOfBatches = bcount, numberOfPairs = pairs)
+      },
+    testSpace = ParameterSpacePB
+      .cross(List(10, 100), List(10, 100), List(4), List(4, 16))
+      .msg[ThroughputPingPongRequest] {
+        case (msize, bsize, bcount, pairs) =>
+          SizedThroughputRequest(messageSize = msize, batchSize = bsize, numberOfBatches = bcount, numberOfPairs = pairs)
+      }
+  );
+
   private val windowDataSize = 0.008; // 8kB in MB
   private val windowLengthUtil = utils.Conversions.SizeToTime(windowDataSize, 1.millisecond); // 8kB/s in MB
   private val windowLength = windowLengthUtil.timeForMB(windowDataSize); // 1s window

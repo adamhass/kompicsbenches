@@ -160,6 +160,14 @@ impl benchmarks_grpc::BenchmarkRunner for BenchmarkRunnerActorImpl {
     ) -> grpc::SingleResponse<messages::TestResult> {
         grpc::SingleResponse::completed(not_implemented())
     }
+
+    fn sized_throughput(
+        &self,
+        _o: grpc::RequestOptions,
+        p: benchmarks::SizedThroughputRequest,
+    ) -> grpc::SingleResponse<messages::TestResult> {
+        grpc::SingleResponse::completed(not_implemented())
+    }
 }
 
 #[derive(Clone)]
@@ -292,10 +300,17 @@ impl benchmarks_grpc::BenchmarkRunner for BenchmarkRunnerComponentImpl {
         grpc::SingleResponse::no_metadata(f)
     }
 
+<<<<<<< HEAD
     fn atomic_broadcast(
         &self,
         _o: grpc::RequestOptions,
         _p: benchmarks::AtomicBroadcastRequest,
+=======
+    fn sized_throughput(
+        &self,
+        _o: grpc::RequestOptions,
+        _p: benchmarks::SizedThroughputRequest,
+>>>>>>> sized throughput test works and passes
     ) -> grpc::SingleResponse<messages::TestResult> {
         grpc::SingleResponse::completed(not_implemented())
     }
@@ -412,10 +427,17 @@ impl benchmarks_grpc::BenchmarkRunner for BenchmarkRunnerMixedImpl {
         grpc::SingleResponse::completed(not_implemented())
     }
 
+<<<<<<< HEAD
     fn atomic_broadcast(
         &self,
         _o: grpc::RequestOptions,
         _p: benchmarks::AtomicBroadcastRequest,
+=======
+    fn sized_throughput(
+        &self,
+        _o: grpc::RequestOptions,
+        _p: benchmarks::SizedThroughputRequest,
+>>>>>>> sized throughput test works and passes
     ) -> grpc::SingleResponse<messages::TestResult> {
         grpc::SingleResponse::completed(not_implemented())
     }

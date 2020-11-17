@@ -2243,26 +2243,27 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x12.\n\x13number_of_proposals\x18\x03\x20\x01(\x04R\x11numberOfProposal\
     s\x121\n\x14concurrent_proposals\x18\x04\x20\x01(\x04R\x13concurrentProp\
     osals\x12(\n\x0freconfiguration\x18\x05\x20\x01(\tR\x0freconfiguration\
-    \x12'\n\x0freconfig_policy\x18\x06\x20\x01(\tR\x0ereconfigPolicy2\xbf\
-    \x08\n\x0fBenchmarkRunner\x12L\n\x05Ready\x12\x20.kompics.benchmarks.Rea\
-    dyRequest\x1a!.kompics.benchmarks.ReadyResponse\x12P\n\x08Shutdown\x12#.\
-    kompics.benchmarks.ShutdownRequest\x1a\x1f.kompics.benchmarks.ShutdownAc\
-    k\x12O\n\x08PingPong\x12#.kompics.benchmarks.PingPongRequest\x1a\x1e.kom\
-    pics.benchmarks.TestResult\x12R\n\x0bNetPingPong\x12#.kompics.benchmarks\
-    .PingPongRequest\x1a\x1e.kompics.benchmarks.TestResult\x12c\n\x12Through\
-    putPingPong\x12-.kompics.benchmarks.ThroughputPingPongRequest\x1a\x1e.ko\
-    mpics.benchmarks.TestResult\x12f\n\x15NetThroughputPingPong\x12-.kompics\
-    .benchmarks.ThroughputPingPongRequest\x1a\x1e.kompics.benchmarks.TestRes\
-    ult\x12[\n\x0eAtomicRegister\x12).kompics.benchmarks.AtomicRegisterReque\
-    st\x1a\x1e.kompics.benchmarks.TestResult\x12_\n\x10StreamingWindows\x12+\
-    .kompics.benchmarks.StreamingWindowsRequest\x1a\x1e.kompics.benchmarks.T\
-    estResult\x12Q\n\tFibonacci\x12$.kompics.benchmarks.FibonacciRequest\x1a\
+    \x12'\n\x0freconfig_policy\x18\x06\x20\x01(\tR\x0ereconfigPolicy2\x9e\t\
+    \n\x0fBenchmarkRunner\x12L\n\x05Ready\x12\x20.kompics.benchmarks.ReadyRe\
+    quest\x1a!.kompics.benchmarks.ReadyResponse\x12P\n\x08Shutdown\x12#.komp\
+    ics.benchmarks.ShutdownRequest\x1a\x1f.kompics.benchmarks.ShutdownAck\
+    \x12O\n\x08PingPong\x12#.kompics.benchmarks.PingPongRequest\x1a\x1e.komp\
+    ics.benchmarks.TestResult\x12R\n\x0bNetPingPong\x12#.kompics.benchmarks.\
+    PingPongRequest\x1a\x1e.kompics.benchmarks.TestResult\x12c\n\x12Throughp\
+    utPingPong\x12-.kompics.benchmarks.ThroughputPingPongRequest\x1a\x1e.kom\
+    pics.benchmarks.TestResult\x12f\n\x15NetThroughputPingPong\x12-.kompics.\
+    benchmarks.ThroughputPingPongRequest\x1a\x1e.kompics.benchmarks.TestResu\
+    lt\x12[\n\x0eAtomicRegister\x12).kompics.benchmarks.AtomicRegisterReques\
+    t\x1a\x1e.kompics.benchmarks.TestResult\x12_\n\x10StreamingWindows\x12+.\
+    kompics.benchmarks.StreamingWindowsRequest\x1a\x1e.kompics.benchmarks.Te\
+    stResult\x12Q\n\tFibonacci\x12$.kompics.benchmarks.FibonacciRequest\x1a\
     \x1e.kompics.benchmarks.TestResult\x12Q\n\tChameneos\x12$.kompics.benchm\
     arks.ChameneosRequest\x1a\x1e.kompics.benchmarks.TestResult\x12W\n\x14Al\
     lPairsShortestPath\x12\x1f.kompics.benchmarks.APSPRequest\x1a\x1e.kompic\
     s.benchmarks.TestResult\x12]\n\x0fAtomicBroadcast\x12*.kompics.benchmark\
-    s.AtomicBroadcastRequest\x1a\x1e.kompics.benchmarks.TestResultb\x06proto\
-    3\
+    s.AtomicBroadcastRequest\x1a\x1e.kompics.benchmarks.TestResult\x12]\n\
+    \x0fSizedThroughput\x12*.kompics.benchmarks.SizedThroughputRequest\x1a\
+    \x1e.kompics.benchmarks.TestResultb\x06proto3\
 ";
 
 static mut file_descriptor_proto_lazy: ::protobuf::lazy::Lazy<::protobuf::descriptor::FileDescriptorProto> = ::protobuf::lazy::Lazy {
