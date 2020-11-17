@@ -120,21 +120,21 @@ object Benchmarks extends ParameterDescriptionImplicits {
       }
   );
 
-  val netThroughputSized = Benchmark(
-    name = "Net Throughput Sized",
-    symbol = "NETTPSIZED",
+  val sizedThroughput = Benchmark(
+    name = "SizedThroughput",
+    symbol = "SIZEDTP",
     invoke = (stub, request: SizedThroughputRequest) => {
-      stub.netThroughputSized(request)
+      stub.sizedThroughput(request)
     },
     space = ParameterSpacePB
       .cross(List(100,1000,10000), List(100,1000), List(4, 16, 64), List(4, 16, 32))
-      .msg[ThroughputPingPongRequest] {
+      .msg[SizedThroughputRequest] {
         case (msize, bsize, bcount, pairs) =>
           SizedThroughputRequest(messageSize = msize, batchSize = bsize, numberOfBatches = bcount, numberOfPairs = pairs)
       },
     testSpace = ParameterSpacePB
       .cross(List(10, 100), List(10, 100), List(4), List(4, 16))
-      .msg[ThroughputPingPongRequest] {
+      .msg[SizedThroughputRequest] {
         case (msize, bsize, bcount, pairs) =>
           SizedThroughputRequest(messageSize = msize, batchSize = bsize, numberOfBatches = bcount, numberOfPairs = pairs)
       }
