@@ -150,6 +150,14 @@ impl benchmarks_grpc::BenchmarkRunner for BenchmarkRunnerActorImpl {
         });
         grpc::SingleResponse::no_metadata(f)
     }
+
+    fn sized_throughput(
+        &self,
+        _o: grpc::RequestOptions,
+        p: benchmarks::SizedThroughputRequest,
+    ) -> grpc::SingleResponse<messages::TestResult> {
+        grpc::SingleResponse::completed(not_implemented())
+    }
 }
 
 #[derive(Clone)]
@@ -281,6 +289,14 @@ impl benchmarks_grpc::BenchmarkRunner for BenchmarkRunnerComponentImpl {
         });
         grpc::SingleResponse::no_metadata(f)
     }
+
+    fn sized_throughput(
+        &self,
+        _o: grpc::RequestOptions,
+        _p: benchmarks::SizedThroughputRequest,
+    ) -> grpc::SingleResponse<messages::TestResult> {
+        grpc::SingleResponse::completed(not_implemented())
+    }
 }
 
 #[derive(Clone)]
@@ -391,6 +407,14 @@ impl benchmarks_grpc::BenchmarkRunner for BenchmarkRunnerMixedImpl {
         p: benchmarks::APSPRequest,
     ) -> grpc::SingleResponse<messages::TestResult> {
         println!("Got APSP req: {:?}", p);
+        grpc::SingleResponse::completed(not_implemented())
+    }
+
+    fn sized_throughput(
+        &self,
+        _o: grpc::RequestOptions,
+        _p: benchmarks::SizedThroughputRequest,
+    ) -> grpc::SingleResponse<messages::TestResult> {
         grpc::SingleResponse::completed(not_implemented())
     }
 }

@@ -8,7 +8,7 @@ pub mod chameneos;
 pub mod fibonacci;
 mod messages;
 pub mod net_throughput_pingpong;
-pub mod net_throughput_sized;
+pub mod sized_throughput;
 pub mod netpingpong;
 pub mod pingpong;
 pub mod streaming_windows;
@@ -72,6 +72,9 @@ impl BenchmarkFactory for ComponentFactory {
     fn all_pairs_shortest_path(&self) -> Result<Box<dyn AbstractBenchmark>, NotImplementedError> {
         Ok(all_pairs_shortest_path::component_apsp::AllPairsShortestPath {}.into())
     }
+    fn sized_throughput(&self) -> Result<Box<dyn AbstractDistributedBenchmark>, NotImplementedError> {
+        Err(NotImplementedError::NotImplementable)
+    }
 }
 
 pub fn actor() -> Box<dyn BenchmarkFactory> {
@@ -92,6 +95,7 @@ impl BenchmarkFactory for ActorFactory {
                 self.atomic_register().map_into()
             }
             streaming_windows::StreamingWindows::LABEL => self.streaming_windows().map_into(),
+            sized_throughput::SizedThroughputBenchmark::LABEL => self.sized_throughput().map_into(),
             _ => Err(NotImplementedError::NotFound),
         }
     }
@@ -135,6 +139,9 @@ impl BenchmarkFactory for ActorFactory {
 
     fn all_pairs_shortest_path(&self) -> Result<Box<dyn AbstractBenchmark>, NotImplementedError> {
         Ok(all_pairs_shortest_path::actor_apsp::AllPairsShortestPath {}.into())
+    }
+    fn sized_throughput(&self) -> Result<Box<dyn AbstractDistributedBenchmark>, NotImplementedError> {
+        Ok(sized_throughput::SizedThroughputBenchmark {}.into())
     }
 }
 pub fn mixed() -> Box<dyn BenchmarkFactory> {
@@ -191,5 +198,8 @@ impl BenchmarkFactory for MixedFactory {
     }
     fn all_pairs_shortest_path(&self) -> Result<Box<dyn AbstractBenchmark>, NotImplementedError> {
         Err(NotImplementedError::FutureWork)
+    }
+    fn sized_throughput(&self) -> Result<Box<dyn AbstractDistributedBenchmark>, NotImplementedError> {
+        Err(NotImplementedError::NotImplementable)
     }
 }

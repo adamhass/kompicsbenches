@@ -16,6 +16,7 @@ service BenchmarkRunner {
 	rpc Fibonacci (FibonacciRequest) returns (TestResult);
 	rpc Chameneos (ChameneosRequest) returns (TestResult);
 	rpc AllPairsShortestPath (APSPRequest) returns (TestResult);
+	rpc SizedThroughput (SizedThroughputRequest) returns (TestResult);
 }
 
 message PingPongRequest {

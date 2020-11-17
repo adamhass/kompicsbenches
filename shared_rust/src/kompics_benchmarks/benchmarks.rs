@@ -1879,7 +1879,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     st\x12.\n\x13number_of_chameneos\x18\x01\x20\x01(\rR\x11numberOfChameneo\
     s\x12,\n\x12number_of_meetings\x18\x02\x20\x01(\x04R\x10numberOfMeetings\
     \"T\n\x0bAPSPRequest\x12&\n\x0fnumber_of_nodes\x18\x01\x20\x01(\rR\rnumb\
-    erOfNodes\x12\x1d\n\nblock_size\x18\x02\x20\x01(\rR\tblockSize2\xe0\x07\
+    erOfNodes\x12\x1d\n\nblock_size\x18\x02\x20\x01(\rR\tblockSize2\xbf\x08\
     \n\x0fBenchmarkRunner\x12L\n\x05Ready\x12\x20.kompics.benchmarks.ReadyRe\
     quest\x1a!.kompics.benchmarks.ReadyResponse\x12P\n\x08Shutdown\x12#.komp\
     ics.benchmarks.ShutdownRequest\x1a\x1f.kompics.benchmarks.ShutdownAck\
@@ -1896,7 +1896,9 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x1e.kompics.benchmarks.TestResult\x12Q\n\tChameneos\x12$.kompics.benchm\
     arks.ChameneosRequest\x1a\x1e.kompics.benchmarks.TestResult\x12W\n\x14Al\
     lPairsShortestPath\x12\x1f.kompics.benchmarks.APSPRequest\x1a\x1e.kompic\
-    s.benchmarks.TestResultb\x06proto3\
+    s.benchmarks.TestResult\x12]\n\x0fSizedThroughput\x12*.kompics.benchmark\
+    s.SizedThroughputRequest\x1a\x1e.kompics.benchmarks.TestResultb\x06proto\
+    3\
 ";
 
 static mut file_descriptor_proto_lazy: ::protobuf::lazy::Lazy<::protobuf::descriptor::FileDescriptorProto> = ::protobuf::lazy::Lazy {

@@ -381,6 +381,7 @@ pub trait BenchmarkFactory: Send + Sync {
     fn fibonacci(&self) -> Result<Box<dyn AbstractBenchmark>, NotImplementedError>;
     fn chameneos(&self) -> Result<Box<dyn AbstractBenchmark>, NotImplementedError>;
     fn all_pairs_shortest_path(&self) -> Result<Box<dyn AbstractBenchmark>, NotImplementedError>;
+    fn sized_throughput(&self) -> Result<Box<dyn AbstractDistributedBenchmark>, NotImplementedError>;
 }
 
 impl Clone for Box<dyn BenchmarkFactory> {

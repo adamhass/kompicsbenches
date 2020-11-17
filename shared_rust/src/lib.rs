@@ -248,12 +248,13 @@ pub mod test_utils {
 
         /*
          * (Net) Throughput Ping Pong
-         */
+        */
         let mut tppr = benchmarks::ThroughputPingPongRequest::new();
         tppr.set_messages_per_pair(100);
         tppr.set_pipeline_size(10);
         tppr.set_parallelism(2);
         tppr.set_static_only(true);
+
         let tppres_f = bench_stub
             .throughput_ping_pong(grpc::RequestOptions::default(), tppr.clone())
             .drop_metadata();
@@ -294,7 +295,6 @@ pub mod test_utils {
         //     "NetThroughputPingPong (GC) TestResult should have been a success!"
         // );
         check_result("NetThroughputPingPong (GC)", ntppres2);
-
         /*
          * Atomic Register
          */
@@ -357,6 +357,25 @@ pub mod test_utils {
             .drop_metadata();
         let apspres = apspres_f.wait().expect("apsp result");
         check_result("AllPairsShortestPath", apspres);
+
+        /*
+         * Sized Throughput
+         */
+        let mut stp = benchmarks::SizedThroughputRequest::new();
+        stp.set_message_size(100);
+        stp.set_batch_size(10);
+        stp.set_number_of_batches(2);
+        stp.set_number_of_pairs(2);
+        let stpres_f = bench_stub
+            .sized_throughput(grpc::RequestOptions::default(), stp.clone())
+            .drop_metadata();
+        let stpres = stpres_f.wait().expect("tpp result");
+        assert!(
+            stpres.has_success(),
+            "ThroughputPingPong (Static) TestResult should have been a success!"
+        );
+        check_result("SizedThroughput", stpres);
+
 
         info!(logger, "Sending shutdown request to master");
         let mut sreq = messages::ShutdownRequest::new();
@@ -860,6 +879,12 @@ mod tests {
         ) -> Result<Box<dyn AbstractBenchmark>, NotImplementedError> {
             Ok(TestLocalBench {}.into())
         }
+
+        fn sized_throughput(
+            &self,
+        ) -> Result<Box<dyn AbstractDistributedBenchmark>, NotImplementedError> {
+            Ok(TestDistributedBench::new().into())
+        }
     }
 
     impl benchmarks_grpc::BenchmarkRunner for TestFactory {
@@ -1013,6 +1038,15 @@ mod tests {
                 e.into()
             });
             grpc::SingleResponse::no_metadata(f)
+        }
+
+        fn sized_throughput(
+            &self,
+            _o: grpc::RequestOptions,
+            _p: benchmarks::SizedThroughputRequest,
+        ) -> grpc::SingleResponse<messages::TestResult>
+        {
+            grpc::SingleResponse::completed(benchmark_runner::not_implemented())
         }
     }
 
