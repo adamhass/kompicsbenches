@@ -67,4 +67,7 @@ class BenchmarkRunnerImpl extends BenchmarkRunnerGrpc.BenchmarkRunner {
     }
   }
 
+  override def sizedThroughput(request: SizedThroughputRequest): Future[TestResult] =
+    Future.successful(NotImplemented());
+
 }

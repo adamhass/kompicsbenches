@@ -113,7 +113,10 @@ class BenchmarkMaster(val runnerPort: Int, val masterPort: Int, val waitFor: Int
       val b = benchmarks.fibonacci;
       runBenchmark(b, request)
     }
-
+    override def sizedThroughput(request: SizedThroughputRequest): Future[TestResult] = queueIfNotReady {
+      val b = benchmarks.sizedThroughput;
+      runBenchmark(b, request)
+    };
     override def shutdown(request: ShutdownRequest): Future[ShutdownAck] = {
       logger.info(s"Got shutdown request with force=${request.force}");
 

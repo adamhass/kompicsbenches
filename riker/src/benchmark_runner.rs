@@ -148,4 +148,13 @@ impl benchmarks_grpc::BenchmarkRunner for BenchmarkRunnerImpl {
         });
         grpc::SingleResponse::no_metadata(f)
     }
+
+
+    fn sized_throughput(
+        &self,
+        _o: grpc::RequestOptions,
+        _p: benchmarks::SizedThroughputRequest,
+    ) -> grpc::SingleResponse<messages::TestResult> {
+        grpc::SingleResponse::completed(not_implemented())
+    }
 }
