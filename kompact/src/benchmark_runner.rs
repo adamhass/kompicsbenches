@@ -166,6 +166,7 @@ impl benchmarks_grpc::BenchmarkRunner for BenchmarkRunnerActorImpl {
         _o: grpc::RequestOptions,
         p: benchmarks::SizedThroughputRequest,
     ) -> grpc::SingleResponse<messages::TestResult> {
+        println!("Got STP req: {:?}", p);
         grpc::SingleResponse::completed(not_implemented())
     }
 }

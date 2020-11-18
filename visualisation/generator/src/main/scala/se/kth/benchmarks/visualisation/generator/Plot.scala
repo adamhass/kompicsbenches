@@ -37,6 +37,7 @@ object Plotter extends StrictLogging {
       case "ATOMICREGISTER"               => plots.AtomicRegister.plot(data)
       case "STREAMINGWINDOWS"             => plots.StreamingWindows.plot(data)
       case "ATOMICBROADCAST"              => plots.AtomicBroadcast.plot(data)
+      case "SIZEDTP"                      => plots.SizedThroughput.plot(data)
       case _                              => PlotGroup.Empty // TODO
     }
   }
