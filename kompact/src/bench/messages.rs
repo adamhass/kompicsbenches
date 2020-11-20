@@ -218,10 +218,11 @@ impl Deserialiser<SizedThroughputMessage> for SizedThroughputMessage {
     fn deserialise(buf: &mut dyn Buf) -> Result<SizedThroughputMessage, SerError> {
         let data_len = buf.get_u32();
         let mut data = Vec::<u8>::with_capacity(data_len as usize);
-        if buf.remaining() == buf.bytes().len() {
+        let len = buf.remaining();
+        if len == buf.bytes().len() {
             data.extend_from_slice(buf.bytes());
         } else {
-            data.extend_from_slice(buf.to_bytes().bytes());
+            data.extend_from_slice(buf.copy_to_bytes(len).bytes());
         }
         Ok(Self { data })
     }
