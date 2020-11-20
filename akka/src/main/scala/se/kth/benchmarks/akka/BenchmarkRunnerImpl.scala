@@ -15,6 +15,7 @@ class BenchmarkRunnerImpl extends BenchmarkRunnerGrpc.BenchmarkRunner {
   override def ready(request: ReadyRequest): Future[ReadyResponse] = {
     Future.successful(ReadyResponse(true))
   }
+
   override def shutdown(request: ShutdownRequest): Future[ShutdownAck] = {
     ???
   }
@@ -54,6 +55,7 @@ class BenchmarkRunnerImpl extends BenchmarkRunnerGrpc.BenchmarkRunner {
       msg
     }
   }
+
   override def chameneos(request: ChameneosRequest): Future[TestResult] = {
     Future {
       val res = BenchmarkRunner.run(bench.Chameneos)(request);
@@ -61,6 +63,7 @@ class BenchmarkRunnerImpl extends BenchmarkRunnerGrpc.BenchmarkRunner {
       msg
     }
   }
+
   override def fibonacci(request: FibonacciRequest): Future[TestResult] = {
     Future {
       val res = BenchmarkRunner.run(bench.Fibonacci)(request);
@@ -69,6 +72,11 @@ class BenchmarkRunnerImpl extends BenchmarkRunnerGrpc.BenchmarkRunner {
     }
   }
 
-  override def sizedThroughput(request: SizedThroughputRequest): Future[TestResult] =
+  override def sizedThroughput(request: SizedThroughputRequest): Future[TestResult] = {
     Future.successful(NotImplemented());
+  }
+
+  override def atomicBroadcast(request: AtomicBroadcastRequest): Future[TestResult] = {
+    Future.successful(NotImplemented());
+  }
 }

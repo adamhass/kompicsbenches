@@ -382,6 +382,7 @@ pub trait BenchmarkFactory: Send + Sync {
     fn chameneos(&self) -> Result<Box<dyn AbstractBenchmark>, NotImplementedError>;
     fn all_pairs_shortest_path(&self) -> Result<Box<dyn AbstractBenchmark>, NotImplementedError>;
     fn sized_throughput(&self) -> Result<Box<dyn AbstractDistributedBenchmark>, NotImplementedError>;
+    fn atomic_broadcast(&self) -> Result<Box<dyn AbstractDistributedBenchmark>, NotImplementedError>;
 }
 
 impl Clone for Box<dyn BenchmarkFactory> {
@@ -662,6 +663,12 @@ pub(crate) mod tests {
             &self,
         ) -> Result<Box<dyn AbstractBenchmark>, NotImplementedError> {
             Ok(Test2B {}.into())
+        }
+
+        fn atomic_broadcast(
+            &self,
+        ) -> Result<Box<dyn AbstractDistributedBenchmark>, NotImplementedError> {
+            Ok(Test3B {}.into())
         }
     }
 
