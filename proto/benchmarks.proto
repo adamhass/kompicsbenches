@@ -45,10 +45,10 @@ message StreamingWindowsRequest {
 }
 
 message SizedThroughputRequest {
-	uint64 message_size = 1;
-	uint64 batch_size = 2;
-	uint64 number_of_batches = 3;
-	uint64 number_of_pairs = 4;
+	uint32 message_size = 1;
+	uint32 batch_size = 2;
+	uint32 number_of_batches = 3;
+	uint32 number_of_pairs = 4;
 }
 
 message FibonacciRequest {
