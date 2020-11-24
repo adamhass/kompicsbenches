@@ -1,6 +1,7 @@
 use crate::serialiser_ids;
 use kompact::prelude::*;
 use std::fmt::{Debug, Formatter};
+use rand::Rng;
 
 #[derive(Debug)]
 pub struct Run;
@@ -176,21 +177,23 @@ impl Deserialiser<Pong> for Pong {
 #[derive(Clone)]
 pub struct SizedThroughputMessage {
     data: Vec<u8>,
+    pub aux: u8,
 }
 
 impl SizedThroughputMessage {
     const SERID: SerId = serialiser_ids::STP_MESSAGE_ID;
 
     pub fn new(size: usize) -> Self {
-        let data = vec![0u8; size];
-        SizedThroughputMessage { data }
+        let mut rng = rand::thread_rng();
+        let data: Vec<u8> = (0..size).map(|v| rng.gen_range(u8::MAX, u8::MAX)).collect();
+        SizedThroughputMessage { data, aux: 1 }
     }
 }
 
 impl Debug for SizedThroughputMessage {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("BigPingMsg")
-            .field("data length", &self.data.len())
+            .field("data length", &(self.data.len()+1))
             .finish()
     }
 }
@@ -204,6 +207,7 @@ impl Serialisable for SizedThroughputMessage {
     }
     fn serialise(&self, buf: &mut dyn BufMut) -> Result<(), SerError> {
         buf.put_u32(self.data.len() as u32);
+        buf.put_u8(self.aux);
         buf.put_slice(self.data.as_slice());
         Ok(())
     }
@@ -219,11 +223,12 @@ impl Deserialiser<SizedThroughputMessage> for SizedThroughputMessage {
         let data_len = buf.get_u32();
         let mut data = Vec::<u8>::with_capacity(data_len as usize);
         let len = buf.remaining();
+        let aux = buf.get_u8();
         if len == buf.bytes().len() {
             data.extend_from_slice(buf.bytes());
         } else {
             data.extend_from_slice(buf.copy_to_bytes(len).bytes());
         }
-        Ok(Self { data })
+        Ok(Self { data, aux })
     }
 }

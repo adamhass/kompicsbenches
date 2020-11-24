@@ -46,28 +46,28 @@ impl DistributedBenchmark for SizedThroughputBenchmark {
             )))
         } else {
             let message_size = split[0];
-            let message_size = message_size.parse::<u64>().map_err(|e| {
+            let message_size = message_size.parse::<u32>().map_err(|e| {
                 BenchmarkError::InvalidMessage(format!(
                     "String '{}' does not represent a client conf: {:?}",
                     str, e
                 ))
             })?;
             let batch_size_str = split[1];
-            let batch_size = batch_size_str.parse::<u64>().map_err(|e| {
+            let batch_size = batch_size_str.parse::<u32>().map_err(|e| {
                 BenchmarkError::InvalidMessage(format!(
                     "String '{}' does not represent a client conf: {:?}",
                     str, e
                 ))
             })?;
             let number_of_batches_str = split[2];
-            let number_of_batches = number_of_batches_str.parse::<u64>().map_err(|e| {
+            let number_of_batches = number_of_batches_str.parse::<u32>().map_err(|e| {
                 BenchmarkError::InvalidMessage(format!(
                     "String '{}' does not represent a client conf: {:?}",
                     str, e
                 ))
             })?;
             let number_of_pairs = split[3];
-            let number_of_pairs = number_of_pairs.parse::<u64>().map_err(|e| {
+            let number_of_pairs = number_of_pairs.parse::<u32>().map_err(|e| {
                 BenchmarkError::InvalidMessage(format!(
                     "String '{}' does not represent a client conf: {:?}",
                     str, e
@@ -110,7 +110,7 @@ const FLUSH_TIMEOUT: Duration = Duration::from_secs(60);
 pub struct SizedThroughputMaster {
     params: Option<SizedThroughputRequest>,
     system: Option<KompactSystem>,
-    sources: Vec<(u64, Arc<Component<SizedThroughputSource>>)>,
+    sources: Vec<(u32, Arc<Component<SizedThroughputSource>>)>,
     //sinks: Vec<Arc<Component<SizedThroughputSink>>>,
     source_refs: Vec<ActorRef<SourceMsg>>,
 }
@@ -280,34 +280,38 @@ pub struct SizedThroughputSource {
     ctx: ComponentContext<Self>,
     latch: Option<Arc<CountdownEvent>>,
     downstream: Option<ActorPath>,
-    message_size: u64,
-    batch_size: u64,
-    number_of_batches: u64,
-    current_batch: u64,
+    message_size: u32,
+    message: SinkMsg,
+    batch_size: u32,
+    number_of_batches: u32,
+    sent_batches: u32,
+    acked_batches: u32,
 }
 
 impl SizedThroughputSource {
     pub fn with(
-        message_size: u64,
-        batch_size: u64,
-        number_of_batches: u64,
+        message_size: u32,
+        batch_size: u32,
+        number_of_batches: u32,
     ) -> SizedThroughputSource {
         SizedThroughputSource {
             ctx: ComponentContext::uninitialised(),
             latch: None,
             downstream: None,
             message_size,
+            message: SinkMsg::Message(SizedThroughputMessage::new(message_size as usize)),
             batch_size,
             number_of_batches,
-            current_batch: 0,
+            sent_batches: 0,
+            acked_batches: 0,
         }
     }
 
     fn send(&mut self) {
+        self.sent_batches += 1;
         for _ in 0..self.batch_size {
             if let Some(sink) = &self.downstream {
-                let message = SizedThroughputMessage::new(self.message_size as usize);
-                sink.tell_serialised(SinkMsg::Message(message), self)
+                sink.tell_serialised(&self.message, self)
                     .expect("serialise");
             }
         }
@@ -323,21 +327,23 @@ impl NetworkActor for SizedThroughputSource {
     fn receive(&mut self, _: Option<ActorPath>, msg: Self::Message) -> Handled {
         match msg {
             SourceMsg::Ack => {
-                // The sink has received the batch and is ready for the next one
-                self.current_batch += 1;
-                if self.current_batch >= self.number_of_batches {
+                self.acked_batches += 1;
+                if self.sent_batches < self.number_of_batches {
+                    // Send the next batch
+                    self.send();
+                } else if self.acked_batches == self.number_of_batches {
                     // Finished
                     self.latch.as_ref().expect("Should have a latch")
                         .decrement().expect("Should decrement");
-                } else {
-                    // Send the next batch
-                    self.send();
                 }
             }
             SourceMsg::Run(latch) => {
                 self.latch = latch;
                 // We start the experiment, set current_batch to 0
-                self.current_batch = 0;
+                // Keep two batches in flight throughout the experiment:
+                self.sent_batches = 0;
+                self.acked_batches = 0;
+                self.send();
                 self.send();
             }
             SourceMsg::Prepare(path, latch) => {
@@ -361,8 +367,8 @@ impl NetworkActor for SizedThroughputSource {
 #[derive(ComponentDefinition)]
 pub struct SizedThroughputSink {
     ctx: ComponentContext<Self>,
-    batch_size: u64,
-    received: u64,
+    batch_size: u32,
+    received: u32,
 }
 impl SizedThroughputSink {
     pub fn new() -> SizedThroughputSink {
@@ -382,8 +388,8 @@ impl NetworkActor for SizedThroughputSink {
 
     fn receive(&mut self, sender: Option<ActorPath>, msg: Self::Message) -> Handled {
         match msg {
-            SinkMsg::Message(_) => {
-                self.received += 1;
+            SinkMsg::Message(data) => {
+                self.received += data.aux as u32;
                 if self.received == self.batch_size {
                     if let Some(source) = sender {
                         // Ack the batch and reset the received counter
@@ -485,7 +491,7 @@ impl Deserialiser<SourceMsg> for SourceMsg {
 
 #[derive(Clone, Debug)]
 pub enum SinkMsg {
-    Prepare(u64),
+    Prepare(u32),
     Message(SizedThroughputMessage),
 }
 
@@ -509,7 +515,7 @@ impl Serialisable for SinkMsg {
         match self {
             SinkMsg::Prepare(size) => {
                 buf.put_u8(Self::PREPARE_FLAG);
-                buf.put_u64(*size);
+                buf.put_u32(*size);
             }
             SinkMsg::Message(msg) => {
                 buf.put_u8(Self::MESSAGE_FLAG);
@@ -527,7 +533,7 @@ impl Deserialiser<SinkMsg> for SinkMsg {
     const SER_ID: SerId = Self::SERID;
     fn deserialise(buf: &mut dyn Buf) -> Result<SinkMsg, SerError> {
         match buf.get_u8() {
-            Self::PREPARE_FLAG => Ok(Self::Prepare(buf.get_u64())),
+            Self::PREPARE_FLAG => Ok(Self::Prepare(buf.get_u32())),
             Self::MESSAGE_FLAG => Ok(Self::Message(SizedThroughputMessage::deserialise(buf)?)),
             _ => unimplemented!(),
         }
