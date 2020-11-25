@@ -8,6 +8,8 @@ use std::str::FromStr;
 use std::sync::Arc;
 use std::time::Duration;
 use synchronoise::CountdownEvent;
+use std::borrow::BorrowMut;
+use std::ops::Deref;
 
 pub struct SizedRefs(Vec<ActorPath>);
 
@@ -311,8 +313,13 @@ impl SizedThroughputSource {
         self.sent_batches += 1;
         for _ in 0..self.batch_size {
             if let Some(sink) = &self.downstream {
-                sink.tell_serialised(&self.message, self)
+                sink.tell_serialised(&self.message, self);
+                /* Try this later?
+                sink.tell_preserialised(
+                    self.ctx.preserialise(&self.message).expect("serialise"),
+                    self)
                     .expect("serialise");
+                 */
             }
         }
     }
@@ -476,6 +483,7 @@ impl Serialisable for SourceMsg {
         Ok(self)
     }
 }
+
 impl Deserialiser<SourceMsg> for SourceMsg {
     const SER_ID: SerId = Self::SERID;
     fn deserialise(buf: &mut dyn Buf) -> Result<SourceMsg, SerError> {

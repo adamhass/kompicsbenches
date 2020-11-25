@@ -1,21 +1,24 @@
-package se.kth.benchmarks.kompicsjava.bench
+package se.kth.benchmarks.kompicsscala.bench
 
-import java.util.UUID
+import java.util.{Optional, UUID}
 import java.util.concurrent.CountDownLatch
 
 import _root_.kompics.benchmarks.benchmarks.SizedThroughputRequest
 import com.typesafe.scalalogging.StrictLogging
+import io.netty.buffer.ByteBuf
 import se.kth.benchmarks._
-import se.kth.benchmarks.kompicsjava.bench.sizedthroughput.{SizedThroughputSerializer, SizedThroughputSink, SizedThroughputSource}
-import se.kth.benchmarks.kompicsscala.{KompicsSystem, KompicsSystemProvider, NetAddress}
+import se.kth.benchmarks.kompicsscala._
+import se.sics.kompics.network.Network
+import se.sics.kompics.network.netty.serialization.{Serializer, Serializers}
+import se.sics.kompics.sl._
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 import scala.util.Try
 
 object SizedThroughput extends DistributedBenchmark {
 
-  implicit val ec = scala.concurrent.ExecutionContext.global;
+  implicit val ec: ExecutionContextExecutor = scala.concurrent.ExecutionContext.global;
 
   case class ClientParams(numPairs: Int, batchSize: Int)
 
@@ -46,9 +49,13 @@ object SizedThroughput extends DistributedBenchmark {
 
       val lf = (0 to params.numberOfPairs).map { index =>
         for {
-          sourceId <- system.createNotify(
-            new SizedThroughputSource.Init(params.messageSize, params.batchSize, params.numberOfBatches, index, sink.asJava, latch)
-          )
+          sourceId <- system.createNotify[Source](Init[Source](params.messageSize,
+                                  params.batchSize,
+                                  params.numberOfBatches,
+                                  index,
+                                  sink,
+                                  latch)
+          );
           _ <- system.connectNetwork(sourceId)
         } yield {
           sourceId
@@ -97,7 +104,7 @@ object SizedThroughput extends DistributedBenchmark {
 
       val lf = (0 to c.numPairs).map { index =>
         for {
-          sinkId <- system.createNotify(new SizedThroughputSink.Init(index, c.batchSize))
+          sinkId <- system.createNotify[Sink](Init[Sink](index, c.batchSize));
           _ <- system.connectNetwork(sinkId);
           _ <- system.startNotify(sinkId)
         } yield {
@@ -142,4 +149,134 @@ object SizedThroughput extends DistributedBenchmark {
 
   override def clientConfToString(c: ClientConf): String = s"${c.numPairs},${c.batchSize}";
   override def clientDataToString(d: ClientData): String = d.asString;
+
+  case class SizedThroughputMessage(id: Int, aux: Int, data: Array[Byte]) extends KompicsEvent;
+  case class Ack(id: Int) extends KompicsEvent;
+
+  object SizedThroughputSerializer extends Serializer {
+
+    val NAME: String = "sizedthroughput";
+
+    def register(): Unit = {
+      Serializers.register(this, NAME);
+      Serializers.register(classOf[SizedThroughputMessage], NAME);
+      Serializers.register(classOf[Ack], NAME);
+    }
+
+    val NO_HINT: Optional[Object] = Optional.empty();
+
+    private val SIZEDTHROUGHPUTMESSAGE_FLAG: Byte = 1;
+    private val ACK_FLAG: Byte = 2;
+
+    override def identifier(): Int = se.kth.benchmarks.kompics.SerializerIds.S_NETTPPP;
+
+    override def toBinary(o: Any, buf: ByteBuf): Unit = {
+      o match {
+        case SizedThroughputMessage(id, aux, data)  => buf.writeByte(SIZEDTHROUGHPUTMESSAGE_FLAG)
+          .writeInt(id).writeByte(aux).writeInt(data.length).writeBytes(data)
+        case Ack(id)  => buf.writeByte(ACK_FLAG).writeInt(id)
+      }
+    }
+
+    override def fromBinary(buf: ByteBuf, hint: Optional[Object]): Object = {
+      val flag = buf.readByte();
+      flag match {
+        case SIZEDTHROUGHPUTMESSAGE_FLAG => {
+          val id = buf.readInt();
+          val aux = buf.readByte();
+          val length = buf.readInt();
+          val data = new Array[Byte](length);
+          buf.readBytes(data, 0, length);
+          SizedThroughputMessage(id, aux, data)
+        }
+        case ACK_FLAG => {
+          val id = buf.readInt();
+          Ack(id)
+        }
+        case _ => {
+          Console.err.print(s"Got invalid ser flag: $flag");
+          null
+        }
+      }
+    }
+  }
+
+  class Source(init: Init[Source]) extends ComponentDefinition {
+
+    val Init(messageSize: Int,
+             batchSize: Int,
+             batchCount: Int,
+             selfId: Int,
+             sink: NetAddress,
+             latch: CountDownLatch) =
+      init;
+
+    val net = requires[Network];
+
+    lazy val selfAddr = cfg.getValue[NetAddress](KompicsSystemProvider.SELF_ADDR_KEY);
+
+    private var sentBatches = 0;
+    private var ackedBatches = 0;
+    private var msg = SizedThroughputMessage(selfId, 1, {
+        val data = new Array[Byte](messageSize)
+        scala.util.Random.nextBytes(data);
+        data
+      })
+
+    def send(): Unit = {
+      sentBatches += 1;
+      for (x <- 0 to batchSize) {
+        trigger((NetMessage.viaTCP(selfAddr, sink)(msg)), net);
+      }
+    }
+
+    ctrl uponEvent {
+      case _: Start => handle {
+        // Send two batches
+        send();
+        send();
+      }
+    }
+
+    net uponEvent {
+      case context @ NetMessage(_, Ack(this.selfId)) =>
+        handle {
+          ackedBatches += 1;
+          if (sentBatches < batchCount) {
+            send()
+          } else if (ackedBatches == batchCount) {
+            // Done
+            latch.countDown();
+          }
+        }
+    }
+  }
+
+  class Sink(init: Init[Sink]) extends ComponentDefinition {
+
+    val Init(selfId: Int, batchSize: Int) = init;
+
+    val net = requires[Network];
+    var received = 0;
+
+    lazy val selfAddr = cfg.getValue[NetAddress](KompicsSystemProvider.SELF_ADDR_KEY);
+
+    ctrl uponEvent {
+      case _: Start =>
+        handle {
+          assert(selfAddr != null);
+        }
+    }
+
+    net uponEvent {
+      case context @ NetMessage(_, SizedThroughputMessage(this.selfId, aux, data)) =>
+        handle {
+          received += aux.toInt;
+          if (received == batchSize) {
+            received = 0;
+            trigger(context.reply(selfAddr)(Ack(selfId)) -> net);
+          }
+        }
+    }
+  }
 }
