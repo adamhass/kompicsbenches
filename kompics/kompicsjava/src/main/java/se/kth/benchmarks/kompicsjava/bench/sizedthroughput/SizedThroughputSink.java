@@ -1,10 +1,7 @@
 
 package se.kth.benchmarks.kompicsjava.bench.sizedthroughput;
 
-import se.kth.benchmarks.kompicsjava.bench.netthroughputpingpong.Ping;
-import se.kth.benchmarks.kompicsjava.bench.netthroughputpingpong.Pong;
 import se.kth.benchmarks.kompicsjava.bench.sizedthroughput.SizedThroughputMessage;
-import se.kth.benchmarks.kompicsjava.bench.streamingwindows.StreamSink;
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Positive;
 import se.sics.kompics.network.Network;
@@ -23,7 +20,6 @@ public class SizedThroughputSink extends ComponentDefinition {
 
     final int id;
     private final NetAddress selfAddr;
-    NetAddress upstream;
     int batchSize;
     int received = 0;
 
@@ -43,20 +39,6 @@ public class SizedThroughputSink extends ComponentDefinition {
         }
     };
 
-    /*
-    private Handler<SizedThroughputMessage> messageHandler = new Handler<SizedThroughputMessage>() {
-        @Override
-        public void handle(SizedThroughputMessage event) {
-            if (event.id == id) {
-                received += event.aux; // ensures deserialization isn't omitted by optimization
-                if (received >= batchSize) {
-                    received = 0;
-                    trigger(NetMessage.viaTCP(selfAddr, new Ack(id)), net);
-                }
-            }
-        }
-    }; */
-
     private ClassMatchedHandler<SizedThroughputMessage, NetMessage> messageHandler
             = new ClassMatchedHandler<SizedThroughputMessage, NetMessage>() {
         @Override
@@ -71,7 +53,7 @@ public class SizedThroughputSink extends ComponentDefinition {
         }
     };
 
-    public static class Init extends se.sics.kompics.Init<StreamSink> {
+    public static class Init extends se.sics.kompics.Init<SizedThroughputSink> {
         final int id;
         final int batchSize;
 

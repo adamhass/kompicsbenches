@@ -1,7 +1,5 @@
 package se.kth.benchmarks.kompicsjava.bench.sizedthroughput;
 
-import se.kth.benchmarks.kompicsjava.bench.netthroughputpingpong.Ping;
-import se.kth.benchmarks.kompicsjava.bench.streamingwindows.StreamSink;
 import se.sics.kompics.*;
 import se.sics.kompics.network.Network;
 import se.kth.benchmarks.kompics.ConfigKeys;
@@ -56,21 +54,24 @@ public class SizedThroughputSource extends ComponentDefinition {
         }
     };
 
-    private Handler<SizedThroughputSink.Ack> ackHandler = new Handler<SizedThroughputSink.Ack>() {
+    private ClassMatchedHandler<SizedThroughputSink.Ack, NetMessage> ackHandler
+            = new ClassMatchedHandler<SizedThroughputSink.Ack, NetMessage>() {
         @Override
-        public void handle(SizedThroughputSink.Ack event) {
-            ackedBatches++;
-            if (sentBatches < batchCount) {
-                // Keep sending
-                send();
-            } else if (ackedBatches == batchCount) {
-                // Done
-                latch.countDown();
+        public void handle(SizedThroughputSink.Ack content, NetMessage context) {
+            if (content.id == id) {
+                ackedBatches++;
+                if (sentBatches < batchCount) {
+                    // Keep sending
+                    send();
+                } else if (ackedBatches == batchCount) {
+                    // Done
+                    latch.countDown();
+                }
             }
         }
     };
 
-    public static class Init extends se.sics.kompics.Init<StreamSink> {
+    public static class Init extends se.sics.kompics.Init<SizedThroughputSource> {
         final int messageSize;
         final int batchSize;
         final int batchCount;
