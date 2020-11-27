@@ -30,12 +30,16 @@ object SizedThroughput extends DistributedBenchmark {
     private var latch: CountDownLatch = null;
 
     override def setup(c: MasterConf, _meta: DeploymentMetaData): Try[ClientConf] = Try {
-      logger.info("Setting up Master");
+      logger.info("Setting up Master, numPairs: " ++ c.numberOfPairs.toString
+        ++ ", message size: " ++ c.messageSize.toString
+        ++ " batchSize: " ++ c.batchSize.toString
+        ++  ", batchCount: " ++ c.numberOfBatches.toString);
+      SizedThroughputSerializer.register();
       SizedThroughputSerializer.register();
 
       this.params = c;
       this.system = KompicsSystemProvider.newRemoteKompicsSystem(Runtime.getRuntime.availableProcessors());
-      ClientParams(c.numberOfPairs, c.numberOfBatches)
+      ClientParams(c.numberOfPairs, c.batchSize)
     };
 
     override def prepareIteration(d: List[ClientData]): Unit = {
@@ -90,7 +94,7 @@ object SizedThroughput extends DistributedBenchmark {
     private var sinks: List[UUID] = null;
 
     override def setup(c: ClientConf): ClientData = {
-      logger.info("Setting up Client, creating sinks.");
+      logger.info("Setting up Client, numPairs: " ++ c.numPairs.toString ++ " batchSize: " ++ c.batchSize.toString);
 
       this.system = KompicsSystemProvider.newRemoteKompicsSystem(1);
       SizedThroughputSerializer.register();

@@ -127,13 +127,13 @@ object Benchmarks extends ParameterDescriptionImplicits {
       stub.sizedThroughput(request)
     },
     space = ParameterSpacePB
-      .cross(List(10000), List(1000), List(1024), List(32, 128))
+      .cross(List(20, 200, 2000), List(100), List(50,500,1000,2000), List(1))
       .msg[SizedThroughputRequest] {
         case (msize, bsize, bcount, pairs) =>
           SizedThroughputRequest(messageSize = msize, batchSize = bsize, numberOfBatches = bcount, numberOfPairs = pairs)
       },
     testSpace = ParameterSpacePB
-      .cross(List(10, 100), List(10, 100), List(4), List(4, 16))
+      .cross(List(10, 100, 10000), List(20, 200), List(5), List(4, 16))
       .msg[SizedThroughputRequest] {
         case (msize, bsize, bcount, pairs) =>
           SizedThroughputRequest(messageSize = msize, batchSize = bsize, numberOfBatches = bcount, numberOfPairs = pairs)

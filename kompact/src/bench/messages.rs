@@ -185,7 +185,7 @@ impl SizedThroughputMessage {
 
     pub fn new(size: usize) -> Self {
         let mut rng = rand::thread_rng();
-        let data: Vec<u8> = (0..size).map(|v| rng.gen_range(u8::MAX, u8::MAX)).collect();
+        let data: Vec<u8> = (0..size).map(|v| rng.gen_range(u8::MIN, u8::MAX)).collect();
         SizedThroughputMessage { data, aux: 1 }
     }
 }
@@ -220,14 +220,13 @@ impl Serialisable for SizedThroughputMessage {
 impl Deserialiser<SizedThroughputMessage> for SizedThroughputMessage {
     const SER_ID: SerId = Self::SERID;
     fn deserialise(buf: &mut dyn Buf) -> Result<SizedThroughputMessage, SerError> {
-        let data_len = buf.get_u32();
-        let mut data = Vec::<u8>::with_capacity(data_len as usize);
-        let len = buf.remaining();
+        let data_len = buf.get_u32() as usize;
+        let mut data = Vec::<u8>::with_capacity(data_len);
         let aux = buf.get_u8();
-        if len == buf.bytes().len() {
+        if data_len == buf.bytes().len() {
             data.extend_from_slice(buf.bytes());
         } else {
-            data.extend_from_slice(buf.copy_to_bytes(len).bytes());
+            data.extend_from_slice(buf.copy_to_bytes(data_len).bytes());
         }
         Ok(Self { data, aux })
     }

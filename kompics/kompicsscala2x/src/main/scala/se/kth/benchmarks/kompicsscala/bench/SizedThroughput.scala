@@ -1,7 +1,7 @@
 package se.kth.benchmarks.kompicsscala.bench
 
-import java.util.{Optional, UUID}
 import java.util.concurrent.CountDownLatch
+import java.util.{Optional, UUID}
 
 import _root_.kompics.benchmarks.benchmarks.SizedThroughputRequest
 import com.typesafe.scalalogging.StrictLogging
@@ -53,11 +53,11 @@ object SizedThroughput extends DistributedBenchmark {
       val lf = (0 to params.numberOfPairs).map { index =>
         for {
           sourceId <- system.createNotify[Source](Init[Source](params.messageSize,
-                                  params.batchSize,
-                                  params.numberOfBatches,
-                                  index,
-                                  sink,
-                                  latch)
+            params.batchSize,
+            params.numberOfBatches,
+            index,
+            sink,
+            latch)
           );
           _ <- system.connectNetwork(sourceId)
         } yield {
@@ -69,12 +69,14 @@ object SizedThroughput extends DistributedBenchmark {
       sources = l;
       this.latch = latch;
     }
+
     override def runIteration(): Unit = {
       val startLF = sources.map(source => system.startNotify(source));
       val startFL = Future.sequence(startLF);
       Await.result(startFL, Duration.Inf);
       latch.await();
     };
+
     override def cleanupIteration(lastIteration: Boolean, execTimeMillis: Double): Unit = {
       logger.debug("Cleaning up source side");
       assert(system != null);
@@ -119,11 +121,13 @@ object SizedThroughput extends DistributedBenchmark {
       sinks = l;
       system.networkAddress.get
     }
+
     override def prepareIteration(): Unit = {
       // nothing
       logger.debug("Preparing sink iteration");
       assert(system != null);
     }
+
     override def cleanupIteration(lastIteration: Boolean): Unit = {
       logger.debug("Cleaning up sink side");
       assert(system != null);
@@ -137,23 +141,28 @@ object SizedThroughput extends DistributedBenchmark {
   }
 
   override def newMaster(): Master = new MasterImpl();
+
   override def msgToMasterConf(msg: scalapb.GeneratedMessage): Try[MasterConf] = Try {
     msg.asInstanceOf[SizedThroughputRequest]
   };
 
   override def newClient(): Client = new ClientImpl();
+
   override def strToClientConf(str: String): Try[ClientConf] = Try {
     val split = str.split(",");
     val numPairs = split(0).toInt;
     val batchSize = split(1).toInt;
     ClientParams(numPairs, batchSize)
   };
+
   override def strToClientData(str: String): Try[ClientData] = NetAddress.fromString(str);
 
   override def clientConfToString(c: ClientConf): String = s"${c.numPairs},${c.batchSize}";
+
   override def clientDataToString(d: ClientData): String = d.asString;
 
   case class SizedThroughputMessage(id: Int, aux: Int, data: Array[Byte]) extends KompicsEvent;
+
   case class Ack(id: Int) extends KompicsEvent;
 
   object SizedThroughputSerializer extends Serializer {
@@ -175,9 +184,9 @@ object SizedThroughput extends DistributedBenchmark {
 
     override def toBinary(o: Any, buf: ByteBuf): Unit = {
       o match {
-        case SizedThroughputMessage(id, aux, data)  => buf.writeByte(SIZEDTHROUGHPUTMESSAGE_FLAG)
+        case SizedThroughputMessage(id, aux, data) => buf.writeByte(SIZEDTHROUGHPUTMESSAGE_FLAG)
           .writeInt(id).writeByte(aux).writeInt(data.length).writeBytes(data)
-        case Ack(id)  => buf.writeByte(ACK_FLAG).writeInt(id)
+        case Ack(id) => buf.writeByte(ACK_FLAG).writeInt(id)
       }
     }
 
@@ -207,11 +216,11 @@ object SizedThroughput extends DistributedBenchmark {
   class Source(init: Init[Source]) extends ComponentDefinition {
 
     val Init(messageSize: Int,
-             batchSize: Int,
-             batchCount: Int,
-             selfId: Int,
-             sink: NetAddress,
-             latch: CountDownLatch) =
+    batchSize: Int,
+    batchCount: Int,
+    selfId: Int,
+    sink: NetAddress,
+    latch: CountDownLatch) =
       init;
 
     val net = requires[Network];
@@ -221,10 +230,10 @@ object SizedThroughput extends DistributedBenchmark {
     private var sentBatches = 0;
     private var ackedBatches = 0;
     private var msg = SizedThroughputMessage(selfId, 1, {
-        val data = new Array[Byte](messageSize)
-        scala.util.Random.nextBytes(data);
-        data
-      })
+      val data = new Array[Byte](messageSize)
+      scala.util.Random.nextBytes(data);
+      data
+    })
 
     def send(): Unit = {
       sentBatches += 1;
@@ -234,7 +243,7 @@ object SizedThroughput extends DistributedBenchmark {
     }
 
     ctrl uponEvent {
-      case _: Start => handle {
+      case _: Start => {
         // Send two batches
         send();
         send();
@@ -242,8 +251,7 @@ object SizedThroughput extends DistributedBenchmark {
     }
 
     net uponEvent {
-      case context @ NetMessage(_, Ack(this.selfId)) =>
-        handle {
+      case context@NetMessage(_, Ack(this.selfId)) => {
           ackedBatches += 1;
           if (sentBatches < batchCount) {
             send()
@@ -265,15 +273,13 @@ object SizedThroughput extends DistributedBenchmark {
     lazy val selfAddr = cfg.getValue[NetAddress](KompicsSystemProvider.SELF_ADDR_KEY);
 
     ctrl uponEvent {
-      case _: Start =>
-        handle {
+      case _: Start => {
           assert(selfAddr != null);
         }
     }
 
     net uponEvent {
-      case context @ NetMessage(_, SizedThroughputMessage(this.selfId, aux, data)) =>
-        handle {
+      case context@NetMessage(_, SizedThroughputMessage(this.selfId, aux, data)) => {
           received += aux.toInt;
           if (received == batchSize) {
             received = 0;
@@ -282,4 +288,5 @@ object SizedThroughput extends DistributedBenchmark {
         }
     }
   }
+
 }
