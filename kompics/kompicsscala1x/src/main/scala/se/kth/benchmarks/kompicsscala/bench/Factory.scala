@@ -13,10 +13,6 @@ object Factory extends BenchmarkFactory {
   override def fibonacci: Benchmark = Fibonacci;
   override def chameneos(): Benchmark = Chameneos;
   override def allPairsShortestPath(): Benchmark = AllPairsShortestPath;
-<<<<<<< HEAD
-=======
   override def sizedThroughput(): DistributedBenchmark = SizedThroughput;
->>>>>>> SizedThroughput KompicsJava and KompicsScala1 runs fine
   override def atomicBroadcast(): DistributedBenchmark = ???;
-  override def sizedThroughput(): DistributedBenchmark = NetThroughputPingPong;
 }
