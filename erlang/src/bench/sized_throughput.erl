@@ -12,37 +12,39 @@
 	master_cleanup_iteration/3,
 	client_setup/2,
 	client_prepare_iteration/1,
-	client_cleanup_iteration/2
-	]).
+	client_cleanup_iteration/2,
+	source/7,
+	generate_message/1,
+	sink/2]).
 
 -record(master_conf, {
-	num_msgs = 0 :: integer(),
 	num_pairs = 0 :: integer(),
-	pipeline = 1 :: integer(),
-	static_only = true :: boolean()}).
+	msg_size = 0 :: integer(),
+	batch_size = 0 :: integer(),
+	batch_count = 0 :: integer()}).
 -type master_conf() :: #master_conf{}.
 -record(client_conf, {
 	num_pairs = 0 :: integer(),
-	static_only = true :: boolean()}).
+	batch_size = 0 :: integer()}).
 -type client_conf() :: #client_conf{}.
 -type client_data() :: [pid()].
 
 -record(master_state, {
 	config = #master_conf{} :: master_conf(),
-	pingers :: [pid()] | 'undefined',
-	pongers :: [pid()] | 'undefined'}).
+	sources :: [pid()] | 'undefined',
+	sinks :: [pid()] | 'undefined'}).
 
 -type master_instance() :: #master_state{}.
 
 -record(client_state, {
 	config = #client_conf{} :: client_conf(),
-	pongers :: [pid()] | 'undefined'}).
+	sinks :: [pid()] | 'undefined'}).
 
 -type client_instance() :: #client_state{}.
 
--spec get_num_msgs(State :: master_instance()) -> integer().
-get_num_msgs(State) ->
-	State#master_state.config#master_conf.num_msgs.
+-spec get_batch_count(State :: master_instance()) -> integer().
+get_batch_count(State) ->
+	State#master_state.config#master_conf.batch_count.
 
 -spec get_num_pairs(State :: master_instance() | client_instance()) -> integer().
 get_num_pairs(State) ->
@@ -53,17 +55,17 @@ get_num_pairs(State) ->
 			Conf#client_conf.num_pairs
 	end.
 
--spec get_pipeline(State :: master_instance()) -> integer().
-get_pipeline(State) ->
-	State#master_state.config#master_conf.pipeline.
+-spec get_msg_size(State :: master_instance()) -> integer().
+get_msg_size(State) ->
+	State#master_state.config#master_conf.msg_size.
 
--spec is_static_only(State :: master_instance() | client_instance()) -> boolean().
-is_static_only(State) ->
+-spec get_batch_size(State :: master_instance() | client_instance()) -> integer().
+get_batch_size(State) ->
 	case State of
 		#master_state{ config = Conf } ->
-			Conf#master_conf.static_only;
+			Conf#master_conf.batch_size;
 		#client_state{ config = Conf } ->
-			Conf#client_conf.static_only
+			Conf#client_conf.batch_size
 	end.
 
 -spec msg_to_master_conf(Msg :: term()) ->
@@ -71,20 +73,20 @@ is_static_only(State) ->
 	{error, Reason :: string()}.
 msg_to_master_conf(Msg) ->
 	case Msg of
-		#{	messages_per_pair := NumMsgs,
-        	pipeline_size := Pipeline,
-        	parallelism := NumPairs,
-        	static_only := StaticOnly
+		#{	message_size := MsgSize,
+				batch_size := BatchSize,
+				number_of_batches := BatchCount,
+				number_of_pairs := NumPairs
         } when
-        	is_integer(NumMsgs) andalso (NumMsgs > 0),
-        	is_integer(Pipeline) andalso (Pipeline > 0),
-        	is_integer(NumPairs) andalso (NumPairs > 0),
-        	is_boolean(StaticOnly) ->
-			{ok, #master_conf{num_msgs = NumMsgs, num_pairs = NumPairs, pipeline = Pipeline, static_only = StaticOnly}};
-		#{	messages_per_pair := _NumMsgs,
-        	pipeline_size := _Pipeline,
-        	parallelism := _NumPairs,
-        	static_only := _StaticOnly
+        	is_integer(MsgSize) andalso (MsgSize > 0),
+        	is_integer(BatchSize) andalso (BatchSize > 0),
+        	is_integer(BatchCount) andalso (BatchCount > 0),
+        	is_integer(NumPairs) andalso (NumPairs > 0) ->
+			{ok, #master_conf{}};
+		#{	message_size := _MsgSize,
+				batch_size := _BatchSize,
+				number_of_batches := _BatchCount,
+				number_of_pairs := _NumPairs
         } ->
 			{error, io_lib:fwrite("Invalid config parameters:~p.~n", [Msg])};
 		_ ->
@@ -106,46 +108,47 @@ new_client() ->
 master_setup(Instance, Conf, _Meta) ->
 	NewInstance = Instance#master_state{config = Conf},
 	process_flag(trap_exit, true),
-	ClientConf = #client_conf{num_pairs = get_num_pairs(NewInstance), static_only = is_static_only(NewInstance) },
+	ClientConf = #client_conf{num_pairs = get_num_pairs(NewInstance), batch_size = get_batch_size(NewInstance) },
 	{ok, NewInstance, ClientConf}.
 
 -spec master_prepare_iteration(Instance :: master_instance(), ClientData :: [client_data()]) ->
 	{ok, NewInstance :: master_instance()}.
 master_prepare_iteration(Instance, ClientData) ->
-	[Pongers| _Rest] = ClientData,
+	[Sinks| _Rest] = ClientData,
 	Self = self(),
-	StaticOnly = is_static_only(Instance),
-	PingerFun = case StaticOnly of
+	if
+		Instance#master_state.sources == undefined ->
+			%% Preparing first iteration
+			SourceFun = fun(Sink) ->
+				source(Sink, generate_message(get_msg_size(Instance)), get_batch_size(Instance), get_batch_count(Instance), 0, 0, Self)
+			end,
+			Sources = lists:map(fun(Sink) -> spawn_link(SourceFun(Sink)) end, Sinks),
+			NewInstance = Instance#master_state{sources = Sources, sinks = Sinks},
+			{ok, NewInstance};
 		true ->
-			fun(Ponger) ->
-				fun() ->
-					static_pinger(Ponger, get_num_msgs(Instance), get_pipeline(Instance), Self)
-				end
-			end;
-		false ->
-			fun(Ponger) ->
-				fun() ->
-					pinger(Ponger, get_num_msgs(Instance), get_pipeline(Instance), Self)
-				end
-			end
-	end,
-	Pingers = lists:map(fun(Ponger) -> spawn_link(PingerFun(Ponger)) end, Pongers),
-	NewInstance = Instance#master_state{pingers = Pingers, pongers = Pongers},
-	{ok, NewInstance}.
+			%% Already prepared, do nothing.
+			{ok, Instance}
+	end.
 
 -spec master_run_iteration(Instance :: master_instance()) ->
 	{ok, NewInstance :: master_instance()}.
 master_run_iteration(Instance) ->
-	lists:foreach(fun(Pinger) -> Pinger ! start end, Instance#master_state.pingers),
-	ok = bench_helpers:await_all(Instance#master_state.pingers, ok),
+	lists:foreach(fun(Source) -> Source ! start end, Instance#master_state.sources),
+	ok = bench_helpers:await_all(Instance#master_state.sources, ok),
 	{ok, Instance}.
 
 -spec master_cleanup_iteration(Instance :: master_instance(), LastIteration :: boolean(), ExecTimeMillis :: float()) ->
 	{ok, NewInstance :: master_instance()}.
-master_cleanup_iteration(Instance, _LastIteration, _ExecTimeMillis) ->
-	ok = bench_helpers:await_exit_all(Instance#master_state.pingers),
-	NewInstance = Instance#master_state{pingers = undefined, pongers = undefined},
-	{ok, NewInstance}.
+master_cleanup_iteration(Instance, LastIteration, _ExecTimeMillis) ->
+	case LastIteration of
+		true ->
+			lists:foreach(fun(Source) -> Source ! stop end, Instance#master_state.sources),
+			ok = bench_helpers:await_exit_all(Instance#master_state.sources),
+			NewInstance = Instance#master_state{sources = undefined},
+			{ok, NewInstance};
+		_ ->
+			{ok, Instance}
+	end.
 
 %%%% On Client Instance %%%%%
 
@@ -155,16 +158,9 @@ client_setup(Instance, Conf) ->
 	ConfInstance = Instance#client_state{config = Conf},
 	process_flag(trap_exit, true),
 	Range = lists:seq(1, get_num_pairs(ConfInstance)),
-	StaticOnly = is_static_only(ConfInstance),
-	PongerFun = case StaticOnly of
-		true ->
-			(fun static_ponger/0);
-		false ->
-			(fun ponger/0)
-	end,
-	Pongers = lists:map(fun(_Index) -> spawn_link(PongerFun) end, Range),
-	NewInstance = ConfInstance#client_state{pongers = Pongers},
-	{ok, NewInstance, Pongers}.
+	Sinks = lists:map(fun(_Index) -> spawn_link(sink(ConfInstance#client_conf.batch_size, 0)) end, Range),
+	NewInstance = ConfInstance#client_state{sinks = Sinks},
+	{ok, NewInstance, Sinks}.
 
 -spec client_prepare_iteration(Instance :: client_instance()) ->
 	{ok, NewInstance :: client_instance()}.
@@ -178,125 +174,77 @@ client_cleanup_iteration(Instance, LastIteration) ->
 	io:fwrite("Cleaning up ponger side.~n"),
 	case LastIteration of
 		true ->
-			lists:foreach(fun(Ponger) -> Ponger ! stop end, Instance#client_state.pongers),
-			ok = bench_helpers:await_exit_all(Instance#client_state.pongers),
-			NewInstance = Instance#client_state{pongers = undefined},
+			lists:foreach(fun(Sink) -> Sink ! stop end, Instance#client_state.sinks),
+			ok = bench_helpers:await_exit_all(Instance#client_state.sinks),
+			NewInstance = Instance#client_state{sinks = undefined},
 			{ok, NewInstance};
 		_ ->
 			{ok, Instance}
 	end.
 
-%%%%%% Static Pinger %%%%%%
--spec static_pinger(Ponger :: pid(), MsgCount :: integer(), Pipeline :: integer(), Return :: pid()) -> ok.
-static_pinger(Ponger, MsgCount, Pipeline, Return) ->
-	receive
-		start ->
-			%io:fwrite("Starting static pinger ~p.~n", [self()]),
-			static_pinger_pipe(Ponger, MsgCount, 0, 0, Pipeline, Return);
-		X ->
-			io:fwrite("Pinger got unexpected message: ~p!~n",[X]),
-			throw(X) % don't accept weird stuff
+%%%%%% Source %%%%%%
+-spec source(Sink :: pid(), Msg :: binary(), BatchSize :: integer(), BatchCount :: integer(), AckCount :: integer(), SentBatches :: integer(), Return :: pid()) -> ok.
+source(Sink, Msg, BatchSize, BatchCount, AckCount, SentBatches, Return) ->
+	if
+		AckCount < BatchCount ->
+			%% Waiting for start or ack
+			receive
+				start ->
+					%io:fwrite("Starting source ~p.~n", [self()]),
+					% Send two batches and then wait for acks
+					send_msgs(Sink, Msg, BatchSize, 0),
+					send_msgs(Sink, Msg, BatchSize, 0),
+					source(Sink, Msg, BatchSize, BatchCount, AckCount, SentBatches+2, Return);
+				ack ->
+					if
+						SentBatches < BatchCount ->
+							% Send another batch and continue
+							send_msgs(Sink, Msg, BatchSize, 0),
+							source(Sink, Msg, BatchSize, BatchCount, AckCount+1, SentBatches+1, Return);
+						true ->
+							% Sent all batches, only waiting for the last acks.
+							source(Sink, Msg, BatchSize, BatchCount, AckCount+1, SentBatches, Return)
+					end;
+				stop ->
+					ok;
+				X ->
+					io:fwrite("Source got unexpected message: ~p!~n",[X]),
+					throw(X) % don't accept weird stuff
+			end;
+		true ->
+			%% all acks received send ok and await next start or stop
+			Return ! {ok},
+			source(Sink, Msg, BatchSize, BatchCount, 0, 0, Return)
+		end.
+
+-spec send_msgs(Sink :: pid(), Msg :: binary(), BatchSize :: integer(), SentMessages :: integer()) -> ok.
+send_msgs(Sink, Msg, BatchSize, SentMessages) ->
+	if
+	SentMessages < BatchSize ->
+		Sink ! {message, Msg, 1, self()},
+		send_msgs(Sink, Msg, BatchSize, SentMessages + 1);
+	true ->
+		ok
 	end.
 
--spec static_pinger_pipe(Ponger :: pid(), MsgCount :: integer(), SentCount :: integer(), RecvCount :: integer(), Pipeline :: integer(), Return :: pid()) -> ok.
-static_pinger_pipe(Ponger, MsgCount, SentCount, RecvCount, Pipeline, Return)
-	when (SentCount < Pipeline) andalso (SentCount < MsgCount) ->
-	Ponger ! {ping, self()},
-	static_pinger_pipe(Ponger, MsgCount, SentCount + 1, RecvCount, Pipeline, Return);
-static_pinger_pipe(Ponger, MsgCount, SentCount, RecvCount, _Pipeline, Return) ->
-	static_pinger_run(Ponger, MsgCount, SentCount, RecvCount, Return).
+generate_message(Size) when is_integer(Size) ->
+	random_bytes = crypto:strong_rand_bytes(Size).
 
--spec static_pinger_run(Ponger :: pid(), MsgCount :: integer(), SentCount :: integer(), RecvCount :: integer(), Return :: pid()) -> ok.
-static_pinger_run(_Ponger, MsgCount, _SentCount, RecvCount, Return) when RecvCount >= MsgCount ->
-	Return ! {ok, self()},
-	%io:fwrite("Finished static pinger ~p.~n", [self()]),
-	ok;
-static_pinger_run(Ponger, MsgCount, SentCount, RecvCount, Return) when SentCount >= MsgCount ->
-	receive
-		pong ->
-			static_pinger_run(Ponger, MsgCount, SentCount, RecvCount + 1, Return);
-		X ->
-			io:fwrite("Pinger got unexpected message: ~p!~n",[X]),
-			throw(X) % don't accept weird stuff
-	end;
-static_pinger_run(Ponger, MsgCount, SentCount, RecvCount, Return) ->
-	Ponger ! {ping, self()},
-	receive
-		pong ->
-			static_pinger_run(Ponger, MsgCount, SentCount + 1, RecvCount + 1, Return);
-		X ->
-			io:fwrite("Pinger got unexpected message: ~p!~n",[X]),
-			throw(X) % don't accept weird stuff
-	end.
-
-%%%%%% Pinger %%%%%%
--spec pinger(Ponger :: pid(), MsgCount :: integer(), Pipeline :: integer(), Return :: pid()) -> ok.
-pinger(Ponger, MsgCount, Pipeline, Return) ->
-	receive
-		start ->
-			%io:fwrite("Starting pinger ~p.~n", [self()]),
-			pinger_pipe(Ponger, MsgCount, 0, 0, Pipeline, Return);
-		X ->
-			io:fwrite("Pinger got unexpected message: ~p!~n",[X]),
-			throw(X) % don't accept weird stuff
-	end.
-
--spec pinger_pipe(Ponger :: pid(), MsgCount :: integer(), SentCount :: integer(), RecvCount :: integer(), Pipeline :: integer(), Return :: pid()) -> ok.
-pinger_pipe(Ponger, MsgCount, SentCount, RecvCount, Pipeline, Return)
-	when (SentCount < Pipeline) andalso (SentCount < MsgCount) ->
-	Ponger ! {ping, SentCount, self()},
-	pinger_pipe(Ponger, MsgCount, SentCount + 1, RecvCount, Pipeline, Return);
-pinger_pipe(Ponger, MsgCount, SentCount, RecvCount, _Pipeline, Return) ->
-	pinger_run(Ponger, MsgCount, SentCount, RecvCount, Return).
-
--spec pinger_run(Ponger :: pid(), MsgCount :: integer(), SentCount :: integer(), RecvCount :: integer(), Return :: pid()) -> ok.
-pinger_run(_Ponger, MsgCount, _SentCount, RecvCount, Return) when RecvCount >= MsgCount ->
-	Return ! {ok, self()},
-	%io:fwrite("Finished pinger ~p.~n", [self()]),
-	ok;
-pinger_run(Ponger, MsgCount, SentCount, RecvCount, Return) when SentCount >= MsgCount ->
-	receive
-		{pong, _Index} ->
-			pinger_run(Ponger, MsgCount, SentCount, RecvCount + 1, Return);
-		X ->
-			io:fwrite("Pinger got unexpected message: ~p!~n",[X]),
-			throw(X) % don't accept weird stuff
-	end;
-pinger_run(Ponger, MsgCount, SentCount, RecvCount, Return) ->
-	Ponger ! {ping, SentCount, self()},
-	receive
-		{pong, _Index} ->
-			pinger_run(Ponger, MsgCount, SentCount + 1, RecvCount + 1, Return);
-		X ->
-			io:fwrite("Pinger got unexpected message: ~p!~n",[X]),
-			throw(X) % don't accept weird stuff
-	end.
-
-%%%%%% Static Ponger %%%%%%
--spec static_ponger() -> ok.
-static_ponger() ->
-	receive
-		stop ->
-			%io:fwrite("Stopping static ponger ~w.~n", [self()]),
-			ok;
-		{ping, Pinger} ->
-			Pinger ! pong,
-			static_ponger();
-		X ->
-			io:fwrite("Ponger got unexpected message: ~p!~n",[X]),
-			throw(X) % don't accept weird stuff
-	end.
-
-%%%%%% Ponger %%%%%%
--spec ponger() -> ok.
-ponger() ->
+%%%%%% Sink %%%%%%
+-spec sink(BatchSize :: integer(), Received :: integer()) -> ok.
+sink(BatchSize, Received) ->
 	receive
 		stop ->
 			%io:fwrite("Stopping ponger ~w.~n", [self()]),
 			ok;
-		{ping, Index, Pinger} ->
-			Pinger ! {pong, Index},
-			ponger();
+		{message, _, Aux, Source} ->
+			if
+				Received + 1 == BatchSize ->
+					Source ! ack,
+					sink(BatchSize, 0);
+				true ->
+					sink(BatchSize, Received+Aux)
+			end;
 		X ->
 			io:fwrite("Ponger got unexpected message: ~p!~n",[X]),
 			throw(X) % don't accept weird stuff
