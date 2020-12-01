@@ -58,6 +58,8 @@
 
 -type 'AtomicRegisterRequest'() :: #'AtomicRegisterRequest'{}.
 
+-type 'SizedThroughputRequest'() :: #'SizedThroughputRequest'{}.
+
 -type 'TestResult'() :: #'TestResult'{}.
 
 -type 'TestSuccess'() :: #'TestSuccess'{}.
@@ -74,20 +76,20 @@
 
 -type 'ShutdownAck'() :: #'ShutdownAck'{}.
 
--export_type(['PingPongRequest'/0, 'ThroughputPingPongRequest'/0, 'AtomicRegisterRequest'/0, 'TestResult'/0, 'TestSuccess'/0, 'TestFailure'/0, 'NotImplemented'/0, 'ReadyRequest'/0, 'ReadyResponse'/0, 'ShutdownRequest'/0, 'ShutdownAck'/0]).
+-export_type(['PingPongRequest'/0, 'ThroughputPingPongRequest'/0, 'AtomicRegisterRequest'/0, 'SizedThroughputRequest'/0, 'TestResult'/0, 'TestSuccess'/0, 'TestFailure'/0, 'NotImplemented'/0, 'ReadyRequest'/0, 'ReadyResponse'/0, 'ShutdownRequest'/0, 'ShutdownAck'/0]).
 
--spec encode_msg(#'PingPongRequest'{} | #'ThroughputPingPongRequest'{} | #'AtomicRegisterRequest'{} | #'TestResult'{} | #'TestSuccess'{} | #'TestFailure'{} | #'NotImplemented'{} | #'ReadyRequest'{} | #'ReadyResponse'{} | #'ShutdownRequest'{} | #'ShutdownAck'{}) -> binary().
+-spec encode_msg(#'PingPongRequest'{} | #'ThroughputPingPongRequest'{} | #'AtomicRegisterRequest'{} | #'SizedThroughputRequest'{} | #'TestResult'{} | #'TestSuccess'{} | #'TestFailure'{} | #'NotImplemented'{} | #'ReadyRequest'{} | #'ReadyResponse'{} | #'ShutdownRequest'{} | #'ShutdownAck'{}) -> binary().
 encode_msg(Msg) when tuple_size(Msg) >= 1 ->
     encode_msg(Msg, element(1, Msg), []).
 
--spec encode_msg(#'PingPongRequest'{} | #'ThroughputPingPongRequest'{} | #'AtomicRegisterRequest'{} | #'TestResult'{} | #'TestSuccess'{} | #'TestFailure'{} | #'NotImplemented'{} | #'ReadyRequest'{} | #'ReadyResponse'{} | #'ShutdownRequest'{} | #'ShutdownAck'{}, atom() | list()) -> binary().
+-spec encode_msg(#'PingPongRequest'{} | #'ThroughputPingPongRequest'{} | #'AtomicRegisterRequest'{} | #'SizedThroughputRequest'{} | #'TestResult'{} | #'TestSuccess'{} | #'TestFailure'{} | #'NotImplemented'{} | #'ReadyRequest'{} | #'ReadyResponse'{} | #'ShutdownRequest'{} | #'ShutdownAck'{}, atom() | list()) -> binary().
 encode_msg(Msg, MsgName) when is_atom(MsgName) ->
     encode_msg(Msg, MsgName, []);
 encode_msg(Msg, Opts)
     when tuple_size(Msg) >= 1, is_list(Opts) ->
     encode_msg(Msg, element(1, Msg), Opts).
 
--spec encode_msg(#'PingPongRequest'{} | #'ThroughputPingPongRequest'{} | #'AtomicRegisterRequest'{} | #'TestResult'{} | #'TestSuccess'{} | #'TestFailure'{} | #'NotImplemented'{} | #'ReadyRequest'{} | #'ReadyResponse'{} | #'ShutdownRequest'{} | #'ShutdownAck'{}, atom(), list()) -> binary().
+-spec encode_msg(#'PingPongRequest'{} | #'ThroughputPingPongRequest'{} | #'AtomicRegisterRequest'{} | #'SizedThroughputRequest'{} | #'TestResult'{} | #'TestSuccess'{} | #'TestFailure'{} | #'NotImplemented'{} | #'ReadyRequest'{} | #'ReadyResponse'{} | #'ShutdownRequest'{} | #'ShutdownAck'{}, atom(), list()) -> binary().
 encode_msg(Msg, MsgName, Opts) ->
     case proplists:get_bool(verify, Opts) of
         true -> verify_msg(Msg, MsgName, Opts);
@@ -105,6 +107,9 @@ encode_msg(Msg, MsgName, Opts) ->
         'AtomicRegisterRequest' ->
             encode_msg_AtomicRegisterRequest(id(Msg, TrUserData),
                                              TrUserData);
+        'SizedThroughputRequest' ->
+            encode_msg_SizedThroughputRequest(id(Msg, TrUserData),
+                                              TrUserData);
         'TestResult' ->
             encode_msg_TestResult(id(Msg, TrUserData), TrUserData);
         'TestSuccess' ->
@@ -224,6 +229,57 @@ encode_msg_AtomicRegisterRequest(#'AtomicRegisterRequest'{read_workload
                     if TrF2 =:= 0.0 -> B1;
                        true ->
                            e_type_float(TrF2, <<B1/binary, 21>>, TrUserData)
+                    end
+                end
+         end,
+    B3 = if F3 == undefined -> B2;
+            true ->
+                begin
+                    TrF3 = id(F3, TrUserData),
+                    if TrF3 =:= 0 -> B2;
+                       true -> e_varint(TrF3, <<B2/binary, 24>>, TrUserData)
+                    end
+                end
+         end,
+    if F4 == undefined -> B3;
+       true ->
+           begin
+               TrF4 = id(F4, TrUserData),
+               if TrF4 =:= 0 -> B3;
+                  true -> e_varint(TrF4, <<B3/binary, 32>>, TrUserData)
+               end
+           end
+    end.
+
+encode_msg_SizedThroughputRequest(Msg, TrUserData) ->
+    encode_msg_SizedThroughputRequest(Msg,
+                                      <<>>,
+                                      TrUserData).
+
+
+encode_msg_SizedThroughputRequest(#'SizedThroughputRequest'{message_size
+                                                                = F1,
+                                                            batch_size = F2,
+                                                            number_of_batches =
+                                                                F3,
+                                                            number_of_pairs =
+                                                                F4},
+                                  Bin, TrUserData) ->
+    B1 = if F1 == undefined -> Bin;
+            true ->
+                begin
+                    TrF1 = id(F1, TrUserData),
+                    if TrF1 =:= 0 -> Bin;
+                       true -> e_varint(TrF1, <<Bin/binary, 8>>, TrUserData)
+                    end
+                end
+         end,
+    B2 = if F2 == undefined -> B1;
+            true ->
+                begin
+                    TrF2 = id(F2, TrUserData),
+                    if TrF2 =:= 0 -> B1;
+                       true -> e_varint(TrF2, <<B1/binary, 16>>, TrUserData)
                     end
                 end
          end,
@@ -545,6 +601,10 @@ decode_msg_2_doit('ThroughputPingPongRequest', Bin,
 decode_msg_2_doit('AtomicRegisterRequest', Bin,
                   TrUserData) ->
     id(decode_msg_AtomicRegisterRequest(Bin, TrUserData),
+       TrUserData);
+decode_msg_2_doit('SizedThroughputRequest', Bin,
+                  TrUserData) ->
+    id(decode_msg_SizedThroughputRequest(Bin, TrUserData),
        TrUserData);
 decode_msg_2_doit('TestResult', Bin, TrUserData) ->
     id(decode_msg_TestResult(Bin, TrUserData), TrUserData);
@@ -1532,6 +1592,389 @@ skip_64_AtomicRegisterRequest(<<_:64, Rest/binary>>, Z1,
                                              F@_3,
                                              F@_4,
                                              TrUserData).
+
+decode_msg_SizedThroughputRequest(Bin, TrUserData) ->
+    dfp_read_field_def_SizedThroughputRequest(Bin,
+                                              0,
+                                              0,
+                                              id(0, TrUserData),
+                                              id(0, TrUserData),
+                                              id(0, TrUserData),
+                                              id(0, TrUserData),
+                                              TrUserData).
+
+dfp_read_field_def_SizedThroughputRequest(<<8,
+                                            Rest/binary>>,
+                                          Z1, Z2, F@_1, F@_2, F@_3, F@_4,
+                                          TrUserData) ->
+    d_field_SizedThroughputRequest_message_size(Rest,
+                                                Z1,
+                                                Z2,
+                                                F@_1,
+                                                F@_2,
+                                                F@_3,
+                                                F@_4,
+                                                TrUserData);
+dfp_read_field_def_SizedThroughputRequest(<<16,
+                                            Rest/binary>>,
+                                          Z1, Z2, F@_1, F@_2, F@_3, F@_4,
+                                          TrUserData) ->
+    d_field_SizedThroughputRequest_batch_size(Rest,
+                                              Z1,
+                                              Z2,
+                                              F@_1,
+                                              F@_2,
+                                              F@_3,
+                                              F@_4,
+                                              TrUserData);
+dfp_read_field_def_SizedThroughputRequest(<<24,
+                                            Rest/binary>>,
+                                          Z1, Z2, F@_1, F@_2, F@_3, F@_4,
+                                          TrUserData) ->
+    d_field_SizedThroughputRequest_number_of_batches(Rest,
+                                                     Z1,
+                                                     Z2,
+                                                     F@_1,
+                                                     F@_2,
+                                                     F@_3,
+                                                     F@_4,
+                                                     TrUserData);
+dfp_read_field_def_SizedThroughputRequest(<<32,
+                                            Rest/binary>>,
+                                          Z1, Z2, F@_1, F@_2, F@_3, F@_4,
+                                          TrUserData) ->
+    d_field_SizedThroughputRequest_number_of_pairs(Rest,
+                                                   Z1,
+                                                   Z2,
+                                                   F@_1,
+                                                   F@_2,
+                                                   F@_3,
+                                                   F@_4,
+                                                   TrUserData);
+dfp_read_field_def_SizedThroughputRequest(<<>>, 0, 0,
+                                          F@_1, F@_2, F@_3, F@_4, _) ->
+    #'SizedThroughputRequest'{message_size = F@_1,
+                              batch_size = F@_2, number_of_batches = F@_3,
+                              number_of_pairs = F@_4};
+dfp_read_field_def_SizedThroughputRequest(Other, Z1, Z2,
+                                          F@_1, F@_2, F@_3, F@_4, TrUserData) ->
+    dg_read_field_def_SizedThroughputRequest(Other,
+                                             Z1,
+                                             Z2,
+                                             F@_1,
+                                             F@_2,
+                                             F@_3,
+                                             F@_4,
+                                             TrUserData).
+
+dg_read_field_def_SizedThroughputRequest(<<1:1, X:7,
+                                           Rest/binary>>,
+                                         N, Acc, F@_1, F@_2, F@_3, F@_4,
+                                         TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_SizedThroughputRequest(Rest,
+                                             N + 7,
+                                             X bsl N + Acc,
+                                             F@_1,
+                                             F@_2,
+                                             F@_3,
+                                             F@_4,
+                                             TrUserData);
+dg_read_field_def_SizedThroughputRequest(<<0:1, X:7,
+                                           Rest/binary>>,
+                                         N, Acc, F@_1, F@_2, F@_3, F@_4,
+                                         TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        8 ->
+            d_field_SizedThroughputRequest_message_size(Rest,
+                                                        0,
+                                                        0,
+                                                        F@_1,
+                                                        F@_2,
+                                                        F@_3,
+                                                        F@_4,
+                                                        TrUserData);
+        16 ->
+            d_field_SizedThroughputRequest_batch_size(Rest,
+                                                      0,
+                                                      0,
+                                                      F@_1,
+                                                      F@_2,
+                                                      F@_3,
+                                                      F@_4,
+                                                      TrUserData);
+        24 ->
+            d_field_SizedThroughputRequest_number_of_batches(Rest,
+                                                             0,
+                                                             0,
+                                                             F@_1,
+                                                             F@_2,
+                                                             F@_3,
+                                                             F@_4,
+                                                             TrUserData);
+        32 ->
+            d_field_SizedThroughputRequest_number_of_pairs(Rest,
+                                                           0,
+                                                           0,
+                                                           F@_1,
+                                                           F@_2,
+                                                           F@_3,
+                                                           F@_4,
+                                                           TrUserData);
+        _ ->
+            case Key band 7 of
+                0 ->
+                    skip_varint_SizedThroughputRequest(Rest,
+                                                       0,
+                                                       0,
+                                                       F@_1,
+                                                       F@_2,
+                                                       F@_3,
+                                                       F@_4,
+                                                       TrUserData);
+                1 ->
+                    skip_64_SizedThroughputRequest(Rest,
+                                                   0,
+                                                   0,
+                                                   F@_1,
+                                                   F@_2,
+                                                   F@_3,
+                                                   F@_4,
+                                                   TrUserData);
+                2 ->
+                    skip_length_delimited_SizedThroughputRequest(Rest,
+                                                                 0,
+                                                                 0,
+                                                                 F@_1,
+                                                                 F@_2,
+                                                                 F@_3,
+                                                                 F@_4,
+                                                                 TrUserData);
+                3 ->
+                    skip_group_SizedThroughputRequest(Rest,
+                                                      Key bsr 3,
+                                                      0,
+                                                      F@_1,
+                                                      F@_2,
+                                                      F@_3,
+                                                      F@_4,
+                                                      TrUserData);
+                5 ->
+                    skip_32_SizedThroughputRequest(Rest,
+                                                   0,
+                                                   0,
+                                                   F@_1,
+                                                   F@_2,
+                                                   F@_3,
+                                                   F@_4,
+                                                   TrUserData)
+            end
+    end;
+dg_read_field_def_SizedThroughputRequest(<<>>, 0, 0,
+                                         F@_1, F@_2, F@_3, F@_4, _) ->
+    #'SizedThroughputRequest'{message_size = F@_1,
+                              batch_size = F@_2, number_of_batches = F@_3,
+                              number_of_pairs = F@_4}.
+
+d_field_SizedThroughputRequest_message_size(<<1:1, X:7,
+                                              Rest/binary>>,
+                                            N, Acc, F@_1, F@_2, F@_3, F@_4,
+                                            TrUserData)
+    when N < 57 ->
+    d_field_SizedThroughputRequest_message_size(Rest,
+                                                N + 7,
+                                                X bsl N + Acc,
+                                                F@_1,
+                                                F@_2,
+                                                F@_3,
+                                                F@_4,
+                                                TrUserData);
+d_field_SizedThroughputRequest_message_size(<<0:1, X:7,
+                                              Rest/binary>>,
+                                            N, Acc, _, F@_2, F@_3, F@_4,
+                                            TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc, TrUserData),
+                          Rest},
+    dfp_read_field_def_SizedThroughputRequest(RestF,
+                                              0,
+                                              0,
+                                              NewFValue,
+                                              F@_2,
+                                              F@_3,
+                                              F@_4,
+                                              TrUserData).
+
+d_field_SizedThroughputRequest_batch_size(<<1:1, X:7,
+                                            Rest/binary>>,
+                                          N, Acc, F@_1, F@_2, F@_3, F@_4,
+                                          TrUserData)
+    when N < 57 ->
+    d_field_SizedThroughputRequest_batch_size(Rest,
+                                              N + 7,
+                                              X bsl N + Acc,
+                                              F@_1,
+                                              F@_2,
+                                              F@_3,
+                                              F@_4,
+                                              TrUserData);
+d_field_SizedThroughputRequest_batch_size(<<0:1, X:7,
+                                            Rest/binary>>,
+                                          N, Acc, F@_1, _, F@_3, F@_4,
+                                          TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc, TrUserData),
+                          Rest},
+    dfp_read_field_def_SizedThroughputRequest(RestF,
+                                              0,
+                                              0,
+                                              F@_1,
+                                              NewFValue,
+                                              F@_3,
+                                              F@_4,
+                                              TrUserData).
+
+d_field_SizedThroughputRequest_number_of_batches(<<1:1,
+                                                   X:7, Rest/binary>>,
+                                                 N, Acc, F@_1, F@_2, F@_3, F@_4,
+                                                 TrUserData)
+    when N < 57 ->
+    d_field_SizedThroughputRequest_number_of_batches(Rest,
+                                                     N + 7,
+                                                     X bsl N + Acc,
+                                                     F@_1,
+                                                     F@_2,
+                                                     F@_3,
+                                                     F@_4,
+                                                     TrUserData);
+d_field_SizedThroughputRequest_number_of_batches(<<0:1,
+                                                   X:7, Rest/binary>>,
+                                                 N, Acc, F@_1, F@_2, _, F@_4,
+                                                 TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc, TrUserData),
+                          Rest},
+    dfp_read_field_def_SizedThroughputRequest(RestF,
+                                              0,
+                                              0,
+                                              F@_1,
+                                              F@_2,
+                                              NewFValue,
+                                              F@_4,
+                                              TrUserData).
+
+d_field_SizedThroughputRequest_number_of_pairs(<<1:1,
+                                                 X:7, Rest/binary>>,
+                                               N, Acc, F@_1, F@_2, F@_3, F@_4,
+                                               TrUserData)
+    when N < 57 ->
+    d_field_SizedThroughputRequest_number_of_pairs(Rest,
+                                                   N + 7,
+                                                   X bsl N + Acc,
+                                                   F@_1,
+                                                   F@_2,
+                                                   F@_3,
+                                                   F@_4,
+                                                   TrUserData);
+d_field_SizedThroughputRequest_number_of_pairs(<<0:1,
+                                                 X:7, Rest/binary>>,
+                                               N, Acc, F@_1, F@_2, F@_3, _,
+                                               TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc, TrUserData),
+                          Rest},
+    dfp_read_field_def_SizedThroughputRequest(RestF,
+                                              0,
+                                              0,
+                                              F@_1,
+                                              F@_2,
+                                              F@_3,
+                                              NewFValue,
+                                              TrUserData).
+
+skip_varint_SizedThroughputRequest(<<1:1, _:7,
+                                     Rest/binary>>,
+                                   Z1, Z2, F@_1, F@_2, F@_3, F@_4,
+                                   TrUserData) ->
+    skip_varint_SizedThroughputRequest(Rest,
+                                       Z1,
+                                       Z2,
+                                       F@_1,
+                                       F@_2,
+                                       F@_3,
+                                       F@_4,
+                                       TrUserData);
+skip_varint_SizedThroughputRequest(<<0:1, _:7,
+                                     Rest/binary>>,
+                                   Z1, Z2, F@_1, F@_2, F@_3, F@_4,
+                                   TrUserData) ->
+    dfp_read_field_def_SizedThroughputRequest(Rest,
+                                              Z1,
+                                              Z2,
+                                              F@_1,
+                                              F@_2,
+                                              F@_3,
+                                              F@_4,
+                                              TrUserData).
+
+skip_length_delimited_SizedThroughputRequest(<<1:1, X:7,
+                                               Rest/binary>>,
+                                             N, Acc, F@_1, F@_2, F@_3, F@_4,
+                                             TrUserData)
+    when N < 57 ->
+    skip_length_delimited_SizedThroughputRequest(Rest,
+                                                 N + 7,
+                                                 X bsl N + Acc,
+                                                 F@_1,
+                                                 F@_2,
+                                                 F@_3,
+                                                 F@_4,
+                                                 TrUserData);
+skip_length_delimited_SizedThroughputRequest(<<0:1, X:7,
+                                               Rest/binary>>,
+                                             N, Acc, F@_1, F@_2, F@_3, F@_4,
+                                             TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_SizedThroughputRequest(Rest2,
+                                              0,
+                                              0,
+                                              F@_1,
+                                              F@_2,
+                                              F@_3,
+                                              F@_4,
+                                              TrUserData).
+
+skip_group_SizedThroughputRequest(Bin, FNum, Z2, F@_1,
+                                  F@_2, F@_3, F@_4, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_SizedThroughputRequest(Rest,
+                                              0,
+                                              Z2,
+                                              F@_1,
+                                              F@_2,
+                                              F@_3,
+                                              F@_4,
+                                              TrUserData).
+
+skip_32_SizedThroughputRequest(<<_:32, Rest/binary>>,
+                               Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
+    dfp_read_field_def_SizedThroughputRequest(Rest,
+                                              Z1,
+                                              Z2,
+                                              F@_1,
+                                              F@_2,
+                                              F@_3,
+                                              F@_4,
+                                              TrUserData).
+
+skip_64_SizedThroughputRequest(<<_:64, Rest/binary>>,
+                               Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
+    dfp_read_field_def_SizedThroughputRequest(Rest,
+                                              Z1,
+                                              Z2,
+                                              F@_1,
+                                              F@_2,
+                                              F@_3,
+                                              F@_4,
+                                              TrUserData).
 
 decode_msg_TestResult(Bin, TrUserData) ->
     dfp_read_field_def_TestResult(Bin,
@@ -2888,6 +3331,8 @@ merge_msgs(Prev, New, MsgName, Opts) ->
                                                 TrUserData);
         'AtomicRegisterRequest' ->
             merge_msg_AtomicRegisterRequest(Prev, New, TrUserData);
+        'SizedThroughputRequest' ->
+            merge_msg_SizedThroughputRequest(Prev, New, TrUserData);
         'TestResult' ->
             merge_msg_TestResult(Prev, New, TrUserData);
         'TestSuccess' ->
@@ -2997,6 +3442,44 @@ merge_msg_AtomicRegisterRequest(#'AtomicRegisterRequest'{read_workload
                                         PFnumber_of_keys;
                                     true -> NFnumber_of_keys
                                  end}.
+
+-compile({nowarn_unused_function,merge_msg_SizedThroughputRequest/3}).
+merge_msg_SizedThroughputRequest(#'SizedThroughputRequest'{message_size
+                                                               = PFmessage_size,
+                                                           batch_size =
+                                                               PFbatch_size,
+                                                           number_of_batches =
+                                                               PFnumber_of_batches,
+                                                           number_of_pairs =
+                                                               PFnumber_of_pairs},
+                                 #'SizedThroughputRequest'{message_size =
+                                                               NFmessage_size,
+                                                           batch_size =
+                                                               NFbatch_size,
+                                                           number_of_batches =
+                                                               NFnumber_of_batches,
+                                                           number_of_pairs =
+                                                               NFnumber_of_pairs},
+                                 _) ->
+    #'SizedThroughputRequest'{message_size =
+                                  if NFmessage_size =:= undefined ->
+                                         PFmessage_size;
+                                     true -> NFmessage_size
+                                  end,
+                              batch_size =
+                                  if NFbatch_size =:= undefined -> PFbatch_size;
+                                     true -> NFbatch_size
+                                  end,
+                              number_of_batches =
+                                  if NFnumber_of_batches =:= undefined ->
+                                         PFnumber_of_batches;
+                                     true -> NFnumber_of_batches
+                                  end,
+                              number_of_pairs =
+                                  if NFnumber_of_pairs =:= undefined ->
+                                         PFnumber_of_pairs;
+                                     true -> NFnumber_of_pairs
+                                  end}.
 
 -compile({nowarn_unused_function,merge_msg_TestResult/3}).
 merge_msg_TestResult(#'TestResult'{sealed_value =
@@ -3108,6 +3591,10 @@ verify_msg(Msg, MsgName, Opts) ->
                                             TrUserData);
         'AtomicRegisterRequest' ->
             v_msg_AtomicRegisterRequest(Msg, [MsgName], TrUserData);
+        'SizedThroughputRequest' ->
+            v_msg_SizedThroughputRequest(Msg,
+                                         [MsgName],
+                                         TrUserData);
         'TestResult' ->
             v_msg_TestResult(Msg, [MsgName], TrUserData);
         'TestSuccess' ->
@@ -3205,6 +3692,38 @@ v_msg_AtomicRegisterRequest(#'AtomicRegisterRequest'{read_workload
     ok;
 v_msg_AtomicRegisterRequest(X, Path, _TrUserData) ->
     mk_type_error({expected_msg, 'AtomicRegisterRequest'},
+                  X,
+                  Path).
+
+-compile({nowarn_unused_function,v_msg_SizedThroughputRequest/3}).
+-dialyzer({nowarn_function,v_msg_SizedThroughputRequest/3}).
+v_msg_SizedThroughputRequest(#'SizedThroughputRequest'{message_size
+                                                           = F1,
+                                                       batch_size = F2,
+                                                       number_of_batches = F3,
+                                                       number_of_pairs = F4},
+                             Path, TrUserData) ->
+    if F1 == undefined -> ok;
+       true ->
+           v_type_uint32(F1, [message_size | Path], TrUserData)
+    end,
+    if F2 == undefined -> ok;
+       true ->
+           v_type_uint32(F2, [batch_size | Path], TrUserData)
+    end,
+    if F3 == undefined -> ok;
+       true ->
+           v_type_uint32(F3,
+                         [number_of_batches | Path],
+                         TrUserData)
+    end,
+    if F4 == undefined -> ok;
+       true ->
+           v_type_uint32(F4, [number_of_pairs | Path], TrUserData)
+    end,
+    ok;
+v_msg_SizedThroughputRequest(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'SizedThroughputRequest'},
                   X,
                   Path).
 
@@ -3462,6 +3981,15 @@ get_msg_defs() ->
               type = uint32, occurrence = optional, opts = []},
        #field{name = number_of_keys, fnum = 4, rnum = 5,
               type = uint64, occurrence = optional, opts = []}]},
+     {{msg, 'SizedThroughputRequest'},
+      [#field{name = message_size, fnum = 1, rnum = 2,
+              type = uint32, occurrence = optional, opts = []},
+       #field{name = batch_size, fnum = 2, rnum = 3,
+              type = uint32, occurrence = optional, opts = []},
+       #field{name = number_of_batches, fnum = 3, rnum = 4,
+              type = uint32, occurrence = optional, opts = []},
+       #field{name = number_of_pairs, fnum = 4, rnum = 5,
+              type = uint32, occurrence = optional, opts = []}]},
      {{msg, 'TestResult'},
       [#gpb_oneof{name = sealed_value, rnum = 2,
                   fields =
@@ -3498,6 +4026,7 @@ get_msg_names() ->
     ['PingPongRequest',
      'ThroughputPingPongRequest',
      'AtomicRegisterRequest',
+     'SizedThroughputRequest',
      'TestResult',
      'TestSuccess',
      'TestFailure',
@@ -3515,6 +4044,7 @@ get_msg_or_group_names() ->
     ['PingPongRequest',
      'ThroughputPingPongRequest',
      'AtomicRegisterRequest',
+     'SizedThroughputRequest',
      'TestResult',
      'TestSuccess',
      'TestFailure',
@@ -3561,6 +4091,15 @@ find_msg_def('AtomicRegisterRequest') ->
             type = uint32, occurrence = optional, opts = []},
      #field{name = number_of_keys, fnum = 4, rnum = 5,
             type = uint64, occurrence = optional, opts = []}];
+find_msg_def('SizedThroughputRequest') ->
+    [#field{name = message_size, fnum = 1, rnum = 2,
+            type = uint32, occurrence = optional, opts = []},
+     #field{name = batch_size, fnum = 2, rnum = 3,
+            type = uint32, occurrence = optional, opts = []},
+     #field{name = number_of_batches, fnum = 3, rnum = 4,
+            type = uint32, occurrence = optional, opts = []},
+     #field{name = number_of_pairs, fnum = 4, rnum = 5,
+            type = uint32, occurrence = optional, opts = []}];
 find_msg_def('TestResult') ->
     [#gpb_oneof{name = sealed_value, rnum = 2,
                 fields =
@@ -3634,6 +4173,9 @@ get_service_def('BenchmarkRunner') ->
            output_stream = false, opts = []},
       #rpc{name = 'AtomicRegister',
            input = 'AtomicRegisterRequest', output = 'TestResult',
+           input_stream = false, output_stream = false, opts = []},
+      #rpc{name = 'SizedThroughput',
+           input = 'SizedThroughputRequest', output = 'TestResult',
            input_stream = false, output_stream = false,
            opts = []}]};
 get_service_def(_) -> error.
@@ -3646,7 +4188,8 @@ get_rpc_names('BenchmarkRunner') ->
      'NetPingPong',
      'ThroughputPingPong',
      'NetThroughputPingPong',
-     'AtomicRegister'];
+     'AtomicRegister',
+     'SizedThroughput'];
 get_rpc_names(_) -> error.
 
 
@@ -3684,6 +4227,10 @@ find_rpc_def_BenchmarkRunner('NetThroughputPingPong') ->
 find_rpc_def_BenchmarkRunner('AtomicRegister') ->
     #rpc{name = 'AtomicRegister',
          input = 'AtomicRegisterRequest', output = 'TestResult',
+         input_stream = false, output_stream = false, opts = []};
+find_rpc_def_BenchmarkRunner('SizedThroughput') ->
+    #rpc{name = 'SizedThroughput',
+         input = 'SizedThroughputRequest', output = 'TestResult',
          input_stream = false, output_stream = false, opts = []};
 find_rpc_def_BenchmarkRunner(_) -> error.
 
@@ -3727,6 +4274,8 @@ fqbins_to_service_and_rpc_name(<<"kompics.benchmarks.BenchmarkRunner">>, <<"NetT
     {'BenchmarkRunner', 'NetThroughputPingPong'};
 fqbins_to_service_and_rpc_name(<<"kompics.benchmarks.BenchmarkRunner">>, <<"AtomicRegister">>) ->
     {'BenchmarkRunner', 'AtomicRegister'};
+fqbins_to_service_and_rpc_name(<<"kompics.benchmarks.BenchmarkRunner">>, <<"SizedThroughput">>) ->
+    {'BenchmarkRunner', 'SizedThroughput'};
 fqbins_to_service_and_rpc_name(S, R) ->
     error({gpb_error, {badservice_or_rpc, {S, R}}}).
 
@@ -3755,6 +4304,9 @@ service_and_rpc_name_to_fqbins('BenchmarkRunner',
 service_and_rpc_name_to_fqbins('BenchmarkRunner',
                                'AtomicRegister') ->
     {<<"kompics.benchmarks.BenchmarkRunner">>, <<"AtomicRegister">>};
+service_and_rpc_name_to_fqbins('BenchmarkRunner',
+                               'SizedThroughput') ->
+    {<<"kompics.benchmarks.BenchmarkRunner">>, <<"SizedThroughput">>};
 service_and_rpc_name_to_fqbins(S, R) ->
     error({gpb_error, {badservice_or_rpc, {S, R}}}).
 
@@ -3763,6 +4315,7 @@ fqbin_to_msg_name(<<"kompics.benchmarks.PingPongRequest">>) -> 'PingPongRequest'
 fqbin_to_msg_name(<<"kompics.benchmarks.ThroughputPingPongRequest">>) ->
     'ThroughputPingPongRequest';
 fqbin_to_msg_name(<<"kompics.benchmarks.AtomicRegisterRequest">>) -> 'AtomicRegisterRequest';
+fqbin_to_msg_name(<<"kompics.benchmarks.SizedThroughputRequest">>) -> 'SizedThroughputRequest';
 fqbin_to_msg_name(<<"kompics.benchmarks.TestResult">>) -> 'TestResult';
 fqbin_to_msg_name(<<"kompics.benchmarks.TestSuccess">>) -> 'TestSuccess';
 fqbin_to_msg_name(<<"kompics.benchmarks.TestFailure">>) -> 'TestFailure';
@@ -3778,6 +4331,7 @@ msg_name_to_fqbin('PingPongRequest') -> <<"kompics.benchmarks.PingPongRequest">>
 msg_name_to_fqbin('ThroughputPingPongRequest') ->
     <<"kompics.benchmarks.ThroughputPingPongRequest">>;
 msg_name_to_fqbin('AtomicRegisterRequest') -> <<"kompics.benchmarks.AtomicRegisterRequest">>;
+msg_name_to_fqbin('SizedThroughputRequest') -> <<"kompics.benchmarks.SizedThroughputRequest">>;
 msg_name_to_fqbin('TestResult') -> <<"kompics.benchmarks.TestResult">>;
 msg_name_to_fqbin('TestSuccess') -> <<"kompics.benchmarks.TestSuccess">>;
 msg_name_to_fqbin('TestFailure') -> <<"kompics.benchmarks.TestFailure">>;
@@ -3830,6 +4384,7 @@ get_all_proto_names() -> ["benchmarks", "messages"].
 get_msg_containment("benchmarks") ->
     ['AtomicRegisterRequest',
      'PingPongRequest',
+     'SizedThroughputRequest',
      'ThroughputPingPongRequest'];
 get_msg_containment("messages") ->
     ['NotImplemented',
@@ -3864,7 +4419,8 @@ get_rpc_containment("benchmarks") ->
      {'BenchmarkRunner', 'NetPingPong'},
      {'BenchmarkRunner', 'ThroughputPingPong'},
      {'BenchmarkRunner', 'NetThroughputPingPong'},
-     {'BenchmarkRunner', 'AtomicRegister'}];
+     {'BenchmarkRunner', 'AtomicRegister'},
+     {'BenchmarkRunner', 'SizedThroughput'}];
 get_rpc_containment("messages") -> [];
 get_rpc_containment(P) ->
     error({gpb_error, {badproto, P}}).
@@ -3882,6 +4438,7 @@ get_proto_by_msg_name_as_fqbin(<<"kompics.benchmarks.ShutdownRequest">>) -> "mes
 get_proto_by_msg_name_as_fqbin(<<"kompics.benchmarks.ReadyRequest">>) -> "messages";
 get_proto_by_msg_name_as_fqbin(<<"kompics.benchmarks.NotImplemented">>) -> "messages";
 get_proto_by_msg_name_as_fqbin(<<"kompics.benchmarks.ThroughputPingPongRequest">>) -> "benchmarks";
+get_proto_by_msg_name_as_fqbin(<<"kompics.benchmarks.SizedThroughputRequest">>) -> "benchmarks";
 get_proto_by_msg_name_as_fqbin(<<"kompics.benchmarks.PingPongRequest">>) -> "benchmarks";
 get_proto_by_msg_name_as_fqbin(<<"kompics.benchmarks.AtomicRegisterRequest">>) -> "benchmarks";
 get_proto_by_msg_name_as_fqbin(<<"kompics.benchmarks.TestFailure">>) -> "messages";

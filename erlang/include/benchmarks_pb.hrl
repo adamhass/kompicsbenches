@@ -34,6 +34,16 @@
         }).
 -endif.
 
+-ifndef('SIZEDTHROUGHPUTREQUEST_PB_H').
+-define('SIZEDTHROUGHPUTREQUEST_PB_H', true).
+-record('SizedThroughputRequest',
+        {message_size = 0       :: non_neg_integer() | undefined, % = 1, 32 bits
+         batch_size = 0         :: non_neg_integer() | undefined, % = 2, 32 bits
+         number_of_batches = 0  :: non_neg_integer() | undefined, % = 3, 32 bits
+         number_of_pairs = 0    :: non_neg_integer() | undefined % = 4, 32 bits
+        }).
+-endif.
+
 -ifndef('TESTRESULT_PB_H').
 -define('TESTRESULT_PB_H', true).
 -record('TestResult',
