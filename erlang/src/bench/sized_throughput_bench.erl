@@ -1,4 +1,4 @@
--module(sized_throughput).
+-module(sized_throughput_bench).
 
 -behaviour(distributed_benchmark).
 
@@ -18,13 +18,13 @@
 	sink/2]).
 
 -record(master_conf, {
-	num_pairs = 0 :: integer(),
+	number_of_pairs = 0 :: integer(),
 	msg_size = 0 :: integer(),
 	batch_size = 0 :: integer(),
 	batch_count = 0 :: integer()}).
 -type master_conf() :: #master_conf{}.
 -record(client_conf, {
-	num_pairs = 0 :: integer(),
+	number_of_pairs = 0 :: integer(),
 	batch_size = 0 :: integer()}).
 -type client_conf() :: #client_conf{}.
 -type client_data() :: [pid()].
@@ -46,13 +46,13 @@
 get_batch_count(State) ->
 	State#master_state.config#master_conf.batch_count.
 
--spec get_num_pairs(State :: master_instance() | client_instance()) -> integer().
-get_num_pairs(State) ->
+-spec get_number_of_pairs(State :: master_instance()) -> integer().
+get_number_of_pairs(State) ->
 	case State of
 		#master_state{ config = Conf } ->
-			Conf#master_conf.num_pairs;
+			Conf#master_conf.number_of_pairs;
 		#client_state{ config = Conf } ->
-			Conf#client_conf.num_pairs
+			Conf#client_conf.number_of_pairs
 	end.
 
 -spec get_msg_size(State :: master_instance()) -> integer().
@@ -82,7 +82,7 @@ msg_to_master_conf(Msg) ->
         	is_integer(BatchSize) andalso (BatchSize > 0),
         	is_integer(BatchCount) andalso (BatchCount > 0),
         	is_integer(NumPairs) andalso (NumPairs > 0) ->
-			{ok, #master_conf{}};
+			{ok, #master_conf{number_of_pairs = NumPairs, msg_size = MsgSize, batch_size = BatchSize, batch_count = BatchCount}};
 		#{	message_size := _MsgSize,
 				batch_size := _BatchSize,
 				number_of_batches := _BatchCount,
@@ -104,11 +104,13 @@ new_client() ->
 %%%% On Master Instance %%%%%
 
 -spec master_setup(Instance :: master_instance(), Conf :: master_conf(), Meta :: distributed_benchmark:deployment_metadata()) ->
-	{ok, Newnstance :: master_instance(), ClientConf :: client_conf()}.
+	{ok, NewInstance :: master_instance(), ClientConf :: client_conf()}.
 master_setup(Instance, Conf, _Meta) ->
 	NewInstance = Instance#master_state{config = Conf},
+	io:fwrite("Setup master.  batch_size: ~w, number_of_pairs: ~w, message_size: ~w, batch_count: ~w ~n",
+		[get_batch_size(NewInstance), get_number_of_pairs(NewInstance), get_msg_size(NewInstance), get_batch_count(NewInstance)]),
 	process_flag(trap_exit, true),
-	ClientConf = #client_conf{num_pairs = get_num_pairs(NewInstance), batch_size = get_batch_size(NewInstance) },
+	ClientConf = #client_conf{number_of_pairs = get_number_of_pairs(NewInstance), batch_size = get_batch_size(NewInstance) },
 	{ok, NewInstance, ClientConf}.
 
 -spec master_prepare_iteration(Instance :: master_instance(), ClientData :: [client_data()]) ->
@@ -119,13 +121,22 @@ master_prepare_iteration(Instance, ClientData) ->
 	if
 		Instance#master_state.sources == undefined ->
 			%% Preparing first iteration
+			io:fwrite("Master preparing first iteration: ~w ~n", [Sinks]),
+			MsgSize = get_msg_size(Instance),
+			BatchCount = get_batch_count(Instance),
+			BatchSize = get_batch_size(Instance),
 			SourceFun = fun(Sink) ->
-				source(Sink, generate_message(get_msg_size(Instance)), get_batch_size(Instance), get_batch_count(Instance), 0, 0, Self)
+				fun() ->
+					Msg = generate_message(MsgSize),
+					source(Sink, Msg, BatchSize, BatchCount, 0, 0, Self)
+				end
 			end,
 			Sources = lists:map(fun(Sink) -> spawn_link(SourceFun(Sink)) end, Sinks),
 			NewInstance = Instance#master_state{sources = Sources, sinks = Sinks},
+			%io:fwrite("Master setup, Created Sources: ~w ~n", [Sources]),
 			{ok, NewInstance};
 		true ->
+			io:fwrite("Master preparing iteration."),
 			%% Already prepared, do nothing.
 			{ok, Instance}
 	end.
@@ -133,6 +144,7 @@ master_prepare_iteration(Instance, ClientData) ->
 -spec master_run_iteration(Instance :: master_instance()) ->
 	{ok, NewInstance :: master_instance()}.
 master_run_iteration(Instance) ->
+	io:fwrite("Master run iteration."),
 	lists:foreach(fun(Source) -> Source ! start end, Instance#master_state.sources),
 	ok = bench_helpers:await_all(Instance#master_state.sources, ok),
 	{ok, Instance}.
@@ -142,11 +154,13 @@ master_run_iteration(Instance) ->
 master_cleanup_iteration(Instance, LastIteration, _ExecTimeMillis) ->
 	case LastIteration of
 		true ->
+			io:fwrite("Master cleanup final iteration."),
 			lists:foreach(fun(Source) -> Source ! stop end, Instance#master_state.sources),
 			ok = bench_helpers:await_exit_all(Instance#master_state.sources),
 			NewInstance = Instance#master_state{sources = undefined},
 			{ok, NewInstance};
 		_ ->
+			io:fwrite("Master cleanup iteration, do nothing."),
 			{ok, Instance}
 	end.
 
@@ -156,22 +170,28 @@ master_cleanup_iteration(Instance, LastIteration, _ExecTimeMillis) ->
 	{ok, NewInstance :: client_instance(), ClientData :: client_data()}.
 client_setup(Instance, Conf) ->
 	ConfInstance = Instance#client_state{config = Conf},
+	%io:fwrite("Setup client. number_of_pairs: ~w, batch_size: ~w ~n",
+  %		[get_number_of_pairs(ConfInstance), get_batch_size(ConfInstance)]),
 	process_flag(trap_exit, true),
-	Range = lists:seq(1, get_num_pairs(ConfInstance)),
-	Sinks = lists:map(fun(_Index) -> spawn_link(sink(ConfInstance#client_conf.batch_size, 0)) end, Range),
+	Range = lists:seq(1, get_number_of_pairs(ConfInstance)),
+	BatchSize = get_batch_size(ConfInstance),
+	SinkFun = fun() -> sink(BatchSize, 0) end,
+	Sinks = lists:map(fun(_Index) -> spawn_link(SinkFun) end, Range),
 	NewInstance = ConfInstance#client_state{sinks = Sinks},
+	%SinkLen = erlang:length(Sinks),
+	%io:fwrite("Created ~w Sinks. ~n", [SinkLen]),
 	{ok, NewInstance, Sinks}.
 
 -spec client_prepare_iteration(Instance :: client_instance()) ->
 	{ok, NewInstance :: client_instance()}.
 client_prepare_iteration(Instance) ->
-	io:fwrite("Preparing ponger iteration.~n"),
+	io:fwrite("Preparing sink iteration.~n"),
 	{ok, Instance}.
 
 -spec client_cleanup_iteration(Instance :: client_instance(), LastIteration :: boolean()) ->
 	{ok, NewInstance :: client_instance()}.
 client_cleanup_iteration(Instance, LastIteration) ->
-	io:fwrite("Cleaning up ponger side.~n"),
+	io:fwrite("Cleaning up sink side.~n"),
 	case LastIteration of
 		true ->
 			lists:foreach(fun(Sink) -> Sink ! stop end, Instance#client_state.sinks),
@@ -185,12 +205,13 @@ client_cleanup_iteration(Instance, LastIteration) ->
 %%%%%% Source %%%%%%
 -spec source(Sink :: pid(), Msg :: binary(), BatchSize :: integer(), BatchCount :: integer(), AckCount :: integer(), SentBatches :: integer(), Return :: pid()) -> ok.
 source(Sink, Msg, BatchSize, BatchCount, AckCount, SentBatches, Return) ->
+	%io:fwrite("Source Waiting for message Self: ~w, Msg: ~w.~n", [self(), Msg]),
 	if
 		AckCount < BatchCount ->
 			%% Waiting for start or ack
 			receive
 				start ->
-					%io:fwrite("Starting source ~p.~n", [self()]),
+					%io:fwrite("Starting source ~p, BatchCount ~w, BatchSize ~w.~n", [self(), BatchCount, BatchSize]),
 					% Send two batches and then wait for acks
 					send_msgs(Sink, Msg, BatchSize, 0),
 					send_msgs(Sink, Msg, BatchSize, 0),
@@ -198,22 +219,25 @@ source(Sink, Msg, BatchSize, BatchCount, AckCount, SentBatches, Return) ->
 				ack ->
 					if
 						SentBatches < BatchCount ->
+							%io:fwrite("~w Sending batch number ~w.~n", [self(), SentBatches+1]),
 							% Send another batch and continue
 							send_msgs(Sink, Msg, BatchSize, 0),
 							source(Sink, Msg, BatchSize, BatchCount, AckCount+1, SentBatches+1, Return);
 						true ->
 							% Sent all batches, only waiting for the last acks.
+							%io:fwrite("~w Sent all batches, received acks ~w.~n", [self(), AckCount+1]),
 							source(Sink, Msg, BatchSize, BatchCount, AckCount+1, SentBatches, Return)
 					end;
 				stop ->
 					ok;
 				X ->
-					io:fwrite("Source got unexpected message: ~p!~n",[X]),
+					%io:fwrite("Source got unexpected message: ~p!~n",[X]),
 					throw(X) % don't accept weird stuff
 			end;
 		true ->
 			%% all acks received send ok and await next start or stop
-			Return ! {ok},
+			%io:fwrite("All acks received ~w.~n", [self()]),
+			Return ! {ok, self()},
 			source(Sink, Msg, BatchSize, BatchCount, 0, 0, Return)
 		end.
 
@@ -227,25 +251,27 @@ send_msgs(Sink, Msg, BatchSize, SentMessages) ->
 		ok
 	end.
 
-generate_message(Size) when is_integer(Size) ->
-	random_bytes = crypto:strong_rand_bytes(Size).
+generate_message(Size) ->
+	crypto:strong_rand_bytes(Size).
 
 %%%%%% Sink %%%%%%
 -spec sink(BatchSize :: integer(), Received :: integer()) -> ok.
 sink(BatchSize, Received) ->
+	%io:fwrite("Sink Waiting for message ~w.~n", [self()]),
 	receive
 		stop ->
-			%io:fwrite("Stopping ponger ~w.~n", [self()]),
+			%io:fwrite("Stopping sink ~w.~n", [self()]),
 			ok;
 		{message, _, Aux, Source} ->
 			if
-				Received + 1 == BatchSize ->
+				Received + Aux == BatchSize ->
+					%io:fwrite("Source sending ack ~w.~n", [self()]),
 					Source ! ack,
 					sink(BatchSize, 0);
 				true ->
 					sink(BatchSize, Received+Aux)
 			end;
 		X ->
-			io:fwrite("Ponger got unexpected message: ~p!~n",[X]),
+			%io:fwrite("Sink got unexpected message: ~p!~n",[X]),
 			throw(X) % don't accept weird stuff
 	end.

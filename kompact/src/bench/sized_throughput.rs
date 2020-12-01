@@ -142,7 +142,7 @@ impl DistributedBenchmarkMaster for SizedThroughputMaster {
         let system = crate::kompact_system_provider::global().new_remote_system("SizedThroughput");
         let client_conf = c.clone();
         let params = c.clone();
-
+        println!("Set up Master");
         for pid in 0..c.number_of_pairs {
             let (source, req_f) = system.create_and_register(|| {
                 SizedThroughputSource::with(
@@ -229,7 +229,6 @@ impl DistributedBenchmarkClient for SizedThroughputClient {
     type ClientData = SizedRefs;
 
     fn setup(&mut self, c: Self::ClientConf) -> Self::ClientData {
-        println!("Setting up Sinks.");
         let system = crate::kompact_system_provider::global().new_remote_system("SizedThroughput");
 
         let mut sinks: Vec<ActorPath> = Vec::new();
@@ -245,6 +244,7 @@ impl DistributedBenchmarkClient for SizedThroughputClient {
             self.sinks.push(sink);
             sinks.push(sink_path);
         }
+        println!("Set up Client");
         self.system = Some(system);
         SizedRefs(sinks)
     }
