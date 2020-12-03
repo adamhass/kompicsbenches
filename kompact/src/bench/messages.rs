@@ -176,7 +176,7 @@ impl Deserialiser<Pong> for Pong {
 
 #[derive(Clone)]
 pub struct SizedThroughputMessage {
-    data: Vec<u8>,
+    data: Box<[u8]>,
     pub aux: u8,
     //checksum: u64,
 }
@@ -186,7 +186,8 @@ impl SizedThroughputMessage {
 
     pub fn new(size: usize) -> Self {
         let mut rng = rand::thread_rng();
-        let data: Vec<u8> = (0..size).map(|v| rng.gen_range(u8::MIN, u8::MAX)).collect();
+        let data_vec: Vec<u8> = (0..size).map(|v| rng.gen_range(u8::MIN, u8::MAX)).collect();
+        let data = data_vec.into_boxed_slice();
         /*let mut checksum: u64 = 0;
         for d in &data {
             checksum += *d as u64;
@@ -198,7 +199,7 @@ impl SizedThroughputMessage {
 impl Debug for SizedThroughputMessage {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("BigPingMsg")
-            .field("data length", &(self.data.len()+1))
+            .field("data length", &(self.data.len()))
             .finish()
     }
 }
@@ -214,7 +215,7 @@ impl Serialisable for SizedThroughputMessage {
         buf.put_u32(self.data.len() as u32);
         buf.put_u8(self.aux);
         //buf.put_u64(self.checksum);
-        buf.put_slice(self.data.as_slice());
+        buf.put_slice(&*self.data);
         Ok(())
     }
 
@@ -227,16 +228,15 @@ impl Deserialiser<SizedThroughputMessage> for SizedThroughputMessage {
     const SER_ID: SerId = Self::SERID;
     fn deserialise(buf: &mut dyn Buf) -> Result<SizedThroughputMessage, SerError> {
         let data_len = buf.get_u32() as usize;
-        let mut data = Vec::<u8>::with_capacity(data_len);
         let aux = buf.get_u8();
-        unsafe {
+        /* unsafe {
             data.set_len(data_len);
-        }
+        } */
         // let checksum = buf.get_u64();
-        if data_len == buf.bytes().len() {
-            data.copy_from_slice(buf.bytes());
-        } else {
-            data.copy_from_slice(buf.copy_to_bytes(data_len).bytes());
+        unsafe {
+            let mut data = Box::<[u8]>::new_uninit_slice(data_len).assume_init();
+            buf.copy_to_slice(&mut *data);
+            Ok(Self { data, aux})
         }
         /*
         let mut sum: u64 = 0;
@@ -245,6 +245,5 @@ impl Deserialiser<SizedThroughputMessage> for SizedThroughputMessage {
         }
         assert_eq!(sum, checksum);
         */
-        Ok(Self { data, aux})
     }
 }
