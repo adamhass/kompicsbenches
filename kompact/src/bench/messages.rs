@@ -178,6 +178,7 @@ impl Deserialiser<Pong> for Pong {
 pub struct SizedThroughputMessage {
     data: Vec<u8>,
     pub aux: u8,
+    //checksum: u64,
 }
 
 impl SizedThroughputMessage {
@@ -186,6 +187,10 @@ impl SizedThroughputMessage {
     pub fn new(size: usize) -> Self {
         let mut rng = rand::thread_rng();
         let data: Vec<u8> = (0..size).map(|v| rng.gen_range(u8::MIN, u8::MAX)).collect();
+        /*let mut checksum: u64 = 0;
+        for d in &data {
+            checksum += *d as u64;
+        }*/
         SizedThroughputMessage { data, aux: 1 }
     }
 }
@@ -208,6 +213,7 @@ impl Serialisable for SizedThroughputMessage {
     fn serialise(&self, buf: &mut dyn BufMut) -> Result<(), SerError> {
         buf.put_u32(self.data.len() as u32);
         buf.put_u8(self.aux);
+        //buf.put_u64(self.checksum);
         buf.put_slice(self.data.as_slice());
         Ok(())
     }
@@ -223,11 +229,22 @@ impl Deserialiser<SizedThroughputMessage> for SizedThroughputMessage {
         let data_len = buf.get_u32() as usize;
         let mut data = Vec::<u8>::with_capacity(data_len);
         let aux = buf.get_u8();
-        if data_len == buf.bytes().len() {
-            data.extend_from_slice(buf.bytes());
-        } else {
-            data.extend_from_slice(buf.copy_to_bytes(data_len).bytes());
+        unsafe {
+            data.set_len(data_len);
         }
-        Ok(Self { data, aux })
+        // let checksum = buf.get_u64();
+        if data_len == buf.bytes().len() {
+            data.copy_from_slice(buf.bytes());
+        } else {
+            data.copy_from_slice(buf.copy_to_bytes(data_len).bytes());
+        }
+        /*
+        let mut sum: u64 = 0;
+        for d in &data {
+            sum += *d as u64;
+        }
+        assert_eq!(sum, checksum);
+        */
+        Ok(Self { data, aux})
     }
 }

@@ -79,8 +79,8 @@ object BenchmarkRunnerServer {
 
 object BenchmarkRunner extends StrictLogging {
 
-  val MIN_RUNS = 5;
-  val MAX_RUNS = 6;
+  val MIN_RUNS = 30;
+  val MAX_RUNS = 100;
   val RSE_TARGET = 0.1; // 10% RSE
 
   def run[B <: Benchmark](b: B)(c: b.Conf): Try[List[Double]] = {
