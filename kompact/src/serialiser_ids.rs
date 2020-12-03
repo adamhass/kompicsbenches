@@ -22,6 +22,5 @@ pub const RECONFIG_ID: SerId = 61;
 pub const TEST_SEQ_ID: SerId = 62;
 pub const STOP_ID: SerId = 63;
 
-pub const STP_SINK_ID: SerId = 64;
-pub const STP_SOURCE_ID: SerId = 65;
-pub const STP_MESSAGE_ID: SerId = 66;
+pub const STP_SOURCE_ID: SerId = 64;
+pub const STP_MESSAGE_ID: SerId = 65;
