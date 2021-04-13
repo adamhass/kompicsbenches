@@ -12,7 +12,7 @@ import java.io.{PrintWriter, OutputStream, File, FileWriter}
 import java.nio.file.Files
 import $file.build, build.{relps, relp, binp, format}
 import $file.benchmarks, benchmarks._
-import $ivy.`com.decodified::scala-ssh:0.9.0`, com.decodified.scalassh.{SSH, HostConfigProvider, PublicKeyLogin}
+import $ivy.`com.decodified::scala-ssh:0.10.0`, com.decodified.scalassh.{SSH, HostConfigProvider, PublicKeyLogin}
 //import $ivy.`ch.qos.logback:logback-classic:1.1.7`
 
 val runnerAddr = "127.0.0.1:45678";

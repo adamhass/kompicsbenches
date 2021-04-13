@@ -1,7 +1,7 @@
 use crate::serialiser_ids;
 use kompact::prelude::*;
-use std::fmt::{Debug, Formatter};
 use rand::Rng;
+use std::fmt::{Debug, Formatter};
 
 #[derive(Debug)]
 pub struct Run;
@@ -236,7 +236,7 @@ impl Deserialiser<SizedThroughputMessage> for SizedThroughputMessage {
         unsafe {
             let mut data = Box::<[u8]>::new_uninit_slice(data_len).assume_init();
             buf.copy_to_slice(&mut *data);
-            Ok(Self { data, aux})
+            Ok(Self { data, aux })
         }
         /*
         let mut sum: u64 = 0;

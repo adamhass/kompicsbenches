@@ -2,15 +2,9 @@ use super::*;
 
 use crate::bench::messages::SizedThroughputMessage;
 use benchmark_suite_shared::kompics_benchmarks::benchmarks::SizedThroughputRequest;
-use kompact::prelude::*;
-use std::fmt::Debug;
-use std::str::FromStr;
-use std::sync::Arc;
-use std::time::Duration;
+use kompact::prelude::{ser_helpers::preserialise_msg, *};
+use std::{borrow::BorrowMut, fmt::Debug, ops::Deref, str::FromStr, sync::Arc, time::Duration};
 use synchronoise::CountdownEvent;
-use std::borrow::BorrowMut;
-use std::ops::Deref;
-use kompact::prelude::ser_helpers::preserialise_msg;
 
 pub struct SizedRefs(Vec<ActorPath>);
 
@@ -143,8 +137,10 @@ impl DistributedBenchmarkMaster for SizedThroughputMaster {
         let system = crate::kompact_system_provider::global().new_remote_system("SizedThroughput");
         let client_conf = c.clone();
         let params = c.clone();
-        println!("Set up Master pairs: {}, batches: {} msg_size: {}, batch_size: {}",
-                 c.number_of_pairs, c.number_of_batches, c.message_size, c.batch_size);
+        println!(
+            "Set up Master pairs: {}, batches: {} msg_size: {}, batch_size: {}",
+            c.number_of_pairs, c.number_of_batches, c.message_size, c.batch_size
+        );
 
         self.system = Some(system);
         self.params = Some(params);
@@ -156,7 +152,11 @@ impl DistributedBenchmarkMaster for SizedThroughputMaster {
             println!("Preparing master for first iteration");
             let sinks = &mut d[0].0;
             let params = self.params.take().unwrap();
-            assert_eq!(params.number_of_pairs, sinks.len() as u32, "num sinks should be num_pairs");
+            assert_eq!(
+                params.number_of_pairs,
+                sinks.len() as u32,
+                "num sinks should be num_pairs"
+            );
             if let Some(system) = &mut self.system {
                 for sink in sinks {
                     let (source, req_f) = system.create_and_register(|| {
@@ -164,7 +164,7 @@ impl DistributedBenchmarkMaster for SizedThroughputMaster {
                             params.get_message_size(),
                             params.get_batch_size(),
                             params.get_number_of_batches(),
-                            sink.clone()
+                            sink.clone(),
                         )
                     });
                     let _ = req_f.wait_expect(REG_TIMEOUT, "Source failed to register!");
@@ -201,7 +201,7 @@ impl DistributedBenchmarkMaster for SizedThroughputMaster {
             if let Some(system) = self.system.take() {
                 for (source) in self.sources.drain(..) {
                     system.kill(source);
-                 }
+                }
                 system
                     .shutdown()
                     .expect("Kompact didn't shut down properly");
@@ -234,7 +234,8 @@ impl DistributedBenchmarkClient for SizedThroughputClient {
 
         let mut sinks: Vec<ActorPath> = Vec::new();
         for _ in 0..c.number_of_pairs {
-            let (sink, reg_f) = system.create_and_register(|| SizedThroughputSink::new(c.batch_size));
+            let (sink, reg_f) =
+                system.create_and_register(|| SizedThroughputSink::new(c.batch_size));
             let sink_path = reg_f.wait_expect(REG_TIMEOUT, "Sink failed to register!");
 
             system
@@ -252,7 +253,7 @@ impl DistributedBenchmarkClient for SizedThroughputClient {
 
     fn prepare_iteration(&mut self) -> () {
         // nothing to do
-       println!("Preparing sinks for SizedThroughput");
+        println!("Preparing sinks for SizedThroughput");
     }
 
     fn cleanup_iteration(&mut self, last_iteration: bool) -> () {
@@ -316,7 +317,9 @@ impl SizedThroughputSource {
         for _ in 0..self.batch_size {
             // Allows serialising by reference while still serialising on each send.
             let preserialised = self.ctx.preserialise(&self.message).expect("preserialise");
-            self.downstream.tell_preserialised(preserialised, self).expect("tell preserialised");
+            self.downstream
+                .tell_preserialised(preserialised, self)
+                .expect("tell preserialised");
         }
     }
 }
@@ -341,8 +344,11 @@ impl NetworkActor for SizedThroughputSource {
                     self.send();
                 } else if self.acked_batches == self.number_of_batches {
                     // Finished
-                    self.latch.take().expect("Should have a latch")
-                        .decrement().expect("Should decrement");
+                    self.latch
+                        .take()
+                        .expect("Should have a latch")
+                        .decrement()
+                        .expect("Should decrement");
                 }
             }
             SourceMsg::Run(latch) => {

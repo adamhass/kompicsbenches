@@ -9,9 +9,9 @@ pub mod chameneos;
 pub mod fibonacci;
 mod messages;
 pub mod net_throughput_pingpong;
-pub mod sized_throughput;
 pub mod netpingpong;
 pub mod pingpong;
+pub mod sized_throughput;
 pub mod streaming_windows;
 pub mod throughput_pingpong;
 
@@ -80,7 +80,9 @@ impl BenchmarkFactory for ComponentFactory {
         Err(NotImplementedError::NotImplementable)
     }
 
-    fn sized_throughput(&self) -> Result<Box<dyn AbstractDistributedBenchmark>, NotImplementedError> {
+    fn sized_throughput(
+        &self,
+    ) -> Result<Box<dyn AbstractDistributedBenchmark>, NotImplementedError> {
         Err(NotImplementedError::NotImplementable)
     }
 }
@@ -155,7 +157,9 @@ impl BenchmarkFactory for ActorFactory {
         Err(NotImplementedError::NotImplementable)
     }
 
-    fn sized_throughput(&self) -> Result<Box<dyn AbstractDistributedBenchmark>, NotImplementedError> {
+    fn sized_throughput(
+        &self,
+    ) -> Result<Box<dyn AbstractDistributedBenchmark>, NotImplementedError> {
         Ok(sized_throughput::SizedThroughputBenchmark {}.into())
     }
 }
@@ -224,7 +228,9 @@ impl BenchmarkFactory for MixedFactory {
         Ok(atomic_broadcast::atomic_broadcast::AtomicBroadcast {}.into())
     }
 
-    fn sized_throughput(&self) -> Result<Box<dyn AbstractDistributedBenchmark>, NotImplementedError> {
+    fn sized_throughput(
+        &self,
+    ) -> Result<Box<dyn AbstractDistributedBenchmark>, NotImplementedError> {
         Err(NotImplementedError::NotImplementable)
     }
 }
