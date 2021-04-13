@@ -87,13 +87,13 @@ object Benchmarks extends ParameterDescriptionImplicits {
       stub.throughputPingPong(request)
     },
     space = ParameterSpacePB
-      .cross(List(1L.mio, 10L.mio), List(10, 50, 500), List(1, 2, 4, 8, 16, 24, 32, 34, 36, 38, 40), List(true, false))
+      .cross(List(10L.mio), List(10, 500), List(1, 2, 4, 8, 16, 24, 32, 64, 128), List(false))
       .msg[ThroughputPingPongRequest] {
         case (n, p, par, s) =>
           ThroughputPingPongRequest(messagesPerPair = n, pipelineSize = p, parallelism = par, staticOnly = s)
       },
     testSpace = ParameterSpacePB
-      .cross(10L.k to 100L.k by 30L.k, List(10, 500), List(1, 4, 8), List(true, false))
+      .cross(10L.k to 100L.k by 30L.k, List(10, 500), List(1, 32, 128), List(false))
       .msg[ThroughputPingPongRequest] {
         case (n, p, par, s) =>
           ThroughputPingPongRequest(messagesPerPair = n, pipelineSize = p, parallelism = par, staticOnly = s)
@@ -127,13 +127,13 @@ object Benchmarks extends ParameterDescriptionImplicits {
       stub.sizedThroughput(request)
     },
     space = ParameterSpacePB
-      .cross(List(20, 200, 2000), List(100), List(50,500,1000,2000), List(1))
+      .cross(List(10, 100, 1.k, 10.k), List(100), List(10.k), List(1, 2, 4, 8, 16, 24, 32, 64, 128))
       .msg[SizedThroughputRequest] {
         case (msize, bsize, bcount, pairs) =>
           SizedThroughputRequest(messageSize = msize, batchSize = bsize, numberOfBatches = bcount, numberOfPairs = pairs)
       },
     testSpace = ParameterSpacePB
-      .cross(List(10, 100, 10000), List(20, 200), List(5), List(4, 16))
+      .cross(List(10, 100, 10000), List(10, 100), List(100), List(1, 8, 32, 128))
       .msg[SizedThroughputRequest] {
         case (msize, bsize, bcount, pairs) =>
           SizedThroughputRequest(messageSize = msize, batchSize = bsize, numberOfBatches = bcount, numberOfPairs = pairs)
@@ -150,7 +150,7 @@ object Benchmarks extends ParameterDescriptionImplicits {
       stub.streamingWindows(request)
     },
     space = ParameterSpacePB
-      .cross(List(1, 2, 4, 8, 16), List(100, 1000), List(0.01, 1.0, 100.0), List(10))
+      .cross(List(1, 2, 4, 8, 16, 32), List(100), List(0.01, 1.0, 100.0), List(10))
       .msg[StreamingWindowsRequest] {
         case (np, bs, ws, nw) => {
           val windowAmp = (ws / windowDataSize).round;

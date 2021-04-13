@@ -104,3 +104,8 @@ out/
 .metals/
 *.code-workspace
 .vscode
+
+# Install script leftovers
+protoc3/
+protoc-3*
+scala-2.13.0.deb

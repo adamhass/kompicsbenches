@@ -14,7 +14,7 @@ sudo apt-get install default-jdk -y
 
 # Scala
 sudo wget https://downloads.lightbend.com/scala/2.13.0/scala-2.13.0.deb
-sudo dpkg -i scala-2.11.12
+sudo dpkg -i scala-2.13.0
 
 # Rustup
 curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain nightly
@@ -26,7 +26,7 @@ sudo apt-get install sbt
 sudo apt install erlang
 
 # Ammonite
-sudo sh -c '(echo "#!/usr/bin/env sh" && curl -L https://github.com/com-lihaoyi/Ammonite/releases/download/2.3.8/2.13-2.3.8) > /usr/local/bin/amm && chmod +x /usr/local/bin/amm' && amm
+sudo sh -c '(echo "#!/usr/bin/env sh" && curl -L https://github.com/com-lihaoyi/Ammonite/releases/download/2.3.8/2.13-2.3.8) > /usr/local/bin/amm && chmod +x /usr/local/bin/amm'
 
 # Protobuf
 ./scripts/travis_install_protobuf.sh
