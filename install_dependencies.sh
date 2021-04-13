@@ -24,7 +24,7 @@ sudo apt install erlang
 curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain nightly
 
 # Ammonite
-sudo sh -c '(echo "#!/usr/bin/env sh" && curl -L https://github.com/com-lihaoyi/Ammonite/releases/download/2.3.8/2.13-2.3.8) > /usr/local/bin/amm && chmod +x /usr/local/bin/amm'
+sudo sh -c '(echo "#!/usr/bin/env sh" && curl -L https://github.com/com-lihaoyi/Ammonite/releases/download/2.3.8/2.12-2.3.8) > /usr/local/bin/amm && chmod +x /usr/local/bin/amm'
 
 # Protobuf
 ./scripts/travis_install_protobuf.sh
