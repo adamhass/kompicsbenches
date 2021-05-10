@@ -187,7 +187,7 @@ object AtomicRegister extends DistributedBenchmark {
     case object OperationSucceeded
   }
 
-  class SystemSupervisor(context: ActorContext[SystemMessage]) extends AbstractBehavior[SystemMessage] {
+  class SystemSupervisor(context: ActorContext[SystemMessage]) extends AbstractBehavior[SystemMessage](context) {
     import SystemSupervisor._
 
     val resolver = ActorRefResolver(context.system)
@@ -266,7 +266,7 @@ object AtomicRegister extends DistributedBenchmark {
   }
 
   class AtomicRegisterActor(context: ActorContext[AtomicRegisterMessage], read_workload: Float, write_workload: Float, testing: Boolean)
-      extends AbstractBehavior[AtomicRegisterMessage] {
+      extends AbstractBehavior[AtomicRegisterMessage](context) {
     implicit def addComparators[A](x: A)(implicit o: math.Ordering[A]): o.Ops =
       o.mkOrderingOps(x); // for tuple comparison
 //    val logger = context.log

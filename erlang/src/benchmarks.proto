@@ -10,6 +10,7 @@ service BenchmarkRunner {
 	rpc PingPong (PingPongRequest) returns (TestResult);
 	rpc NetPingPong (PingPongRequest) returns (TestResult);
 	rpc ThroughputPingPong (ThroughputPingPongRequest) returns (TestResult);
+	rpc Fibonacci (FibonacciRequest) returns (TestResult);
 	rpc NetThroughputPingPong (ThroughputPingPongRequest) returns (TestResult);
 	rpc AtomicRegister (AtomicRegisterRequest) returns (TestResult);
 	rpc SizedThroughput (SizedThroughputRequest) returns (TestResult);
@@ -35,4 +36,7 @@ message SizedThroughputRequest {
 	uint32 batch_size = 2;
 	uint32 number_of_batches = 3;
 	uint32 number_of_pairs = 4;
+}
+message FibonacciRequest{
+	uint32 fib_number = 1;
 }

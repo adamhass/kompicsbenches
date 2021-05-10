@@ -109,7 +109,7 @@ object ThroughputPingPong extends Benchmark {
     def apply(): Behavior[SystemMesssage] = Behaviors.setup(context => new SystemSupervisor(context))
   }
 
-  class SystemSupervisor(context: ActorContext[SystemMesssage]) extends AbstractBehavior[SystemMesssage] {
+  class SystemSupervisor(context: ActorContext[SystemMesssage]) extends AbstractBehavior[SystemMesssage](context) {
 
     var pingers: List[ActorRef[MsgForPinger]] = null
     var pongers: List[ActorRef[Ping]] = null
@@ -196,7 +196,7 @@ object ThroughputPingPong extends Benchmark {
                count: Long,
                pipeline: Long,
                ponger: ActorRef[Ping])
-      extends AbstractBehavior[MsgForPinger] {
+      extends AbstractBehavior[MsgForPinger](context) {
     var sentCount = 0L;
     var recvCount = 0L;
     val selfRef = context.self
@@ -231,7 +231,7 @@ object ThroughputPingPong extends Benchmark {
     def apply(): Behavior[Ping] = Behaviors.setup(context => new Ponger(context))
   }
 
-  class Ponger(context: ActorContext[Ping]) extends AbstractBehavior[Ping] {
+  class Ponger(context: ActorContext[Ping]) extends AbstractBehavior[Ping](context) {
     override def onMessage(msg: Ping): Behavior[Ping] = {
       msg.src ! Pong(msg.index)
       this
@@ -257,7 +257,7 @@ object ThroughputPingPong extends Benchmark {
                      count: Long,
                      pipeline: Long,
                      ponger: ActorRef[StaticPing])
-      extends AbstractBehavior[MsgForStaticPinger] {
+      extends AbstractBehavior[MsgForStaticPinger](context) {
     var sentCount = 0L;
     var recvCount = 0L;
     val selfRef = context.self
@@ -292,7 +292,7 @@ object ThroughputPingPong extends Benchmark {
     def apply(): Behavior[StaticPing] = Behaviors.setup(context => new StaticPonger(context))
   }
 
-  class StaticPonger(context: ActorContext[StaticPing]) extends AbstractBehavior[StaticPing] {
+  class StaticPonger(context: ActorContext[StaticPing]) extends AbstractBehavior[StaticPing](context) {
     override def onMessage(msg: StaticPing): Behavior[StaticPing] = {
       msg.src ! StaticPong
       this

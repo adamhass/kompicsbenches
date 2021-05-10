@@ -126,7 +126,7 @@ object NetPingPong extends DistributedBenchmark {
     case object OperationSucceeded
   }
 
-  class SystemSupervisor(context: ActorContext[SystemMessage]) extends AbstractBehavior[SystemMessage] {
+  class SystemSupervisor(context: ActorContext[SystemMessage]) extends AbstractBehavior[SystemMessage](context) {
     var pinger: ActorRef[MsgForPinger] = null
     var id: Int = -1
 
@@ -183,7 +183,7 @@ object NetPingPong extends DistributedBenchmark {
   }
 
   class Pinger(context: ActorContext[MsgForPinger], latch: CountDownLatch, count: Long, pongerRef: ClientRef)
-      extends AbstractBehavior[MsgForPinger] {
+      extends AbstractBehavior[MsgForPinger](context) {
     var countDown = count;
     val resolver = ActorRefResolver(context.system)
     val ponger: ActorRef[Ping] = resolver.resolveActorRef(pongerRef.actorPath)
@@ -209,7 +209,7 @@ object NetPingPong extends DistributedBenchmark {
     def apply(): Behavior[Ping] = Behaviors.setup(context => new Ponger(context))
   }
 
-  class Ponger(context: ActorContext[Ping]) extends AbstractBehavior[Ping] {
+  class Ponger(context: ActorContext[Ping]) extends AbstractBehavior[Ping](context) {
     val resolver = ActorRefResolver(context.system)
 
     private def getPingerRef(c: ClientRef): ActorRef[MsgForPinger] = {

@@ -89,7 +89,7 @@ object Chameneos extends Benchmark {
   }
 
   class SystemSupervisor(context: ActorContext[SystemSupervisor.SystemMessage])
-      extends AbstractBehavior[SystemSupervisor.SystemMessage] {
+      extends AbstractBehavior[SystemSupervisor.SystemMessage](context) {
     import SystemSupervisor._;
 
     private var mall: ActorRef[MallMsg] = null;
@@ -149,10 +149,10 @@ object Chameneos extends Benchmark {
                            val numMeetings: Long,
                            val numChameneos: Int,
                            val latch: CountDownLatch)
-      extends AbstractBehavior[MallMsg] {
+      extends AbstractBehavior[MallMsg](context) {
     import Messages._;
 
-    context.setLoggerClass(this.getClass);
+    context.setLoggerName(this.getClass);
     val log = context.log;
     val selfRef = context.self
 
@@ -198,13 +198,13 @@ object Chameneos extends Benchmark {
       Behaviors.setup(context => new ChameneoActor(context, mall, initialColour));
   }
 
-  class ChameneoActor(val context: ActorContext[ChameneoMsg],
+  class ChameneoActor(context: ActorContext[ChameneoMsg],
                       val mall: ActorRef[MallMsg],
                       initialColour: ChameneosColour)
-      extends AbstractBehavior[ChameneoMsg] {
+      extends AbstractBehavior[ChameneoMsg](context) {
     import Messages._;
 
-    context.setLoggerClass(this.getClass);
+    context.setLoggerName(this.getClass);
     val log = context.log;
     val selfRef = context.self
 
