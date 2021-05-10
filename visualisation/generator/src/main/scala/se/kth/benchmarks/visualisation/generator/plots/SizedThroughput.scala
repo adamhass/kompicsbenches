@@ -31,8 +31,8 @@ object SizedThroughput {
       // SizedThroughputRequest(messageSize, batchSize, numberOfBatches, numberOfPairs)
       mainAxis = (params: Params) => params.messageSize,
       groupings = (params: Params) => (params.numberOfBatches, params.numberOfPairs, params.batchSize),
-      plotId = (params: (Long, Long, Long)) => s"nob-${params._1}-nop-${params._2}-bs-${params._3}",
-      plotParams = (params: (Long, Long, Long)) =>
+      plotId = (params: (Int, Int, Int)) => s"nob-${params._1}-nop-${params._2}-bs-${params._3}",
+      plotParams = (params: (Int, Int, Int)) =>
         List(s"number of batches = ${params._1}",
           s"number of pairs = ${params._2}",
           s"batch size = ${params._3})"),
@@ -42,12 +42,12 @@ object SizedThroughput {
       xAxisId = "message-size",
       yAxisLabel = "execution time (ms)",
       units = "ms",
-      calculateParams = (params: (Long, Long, Long)) => {
-        params._1 * params._2 * params._3 // total messages
+      calculateParams = (params: (Int, Int, Int)) => {
+        params._1.toLong * params._2.toLong * params._3.toLong // total messages
       },
-      calculateValue = (totalMessages: Long, messageSize: Long, stats: Statistics) => {
-        val totalBytes = totalMessages * messageSize;
-        val meanTime = stats.sampleMean;
+      calculateValue = (totalMessages: Long, messageSize: Int, stats: Statistics) => {
+        val totalBytes = totalMessages.toLong * messageSize.toLong;
+        val meanTime = stats.sampleMean.toLong;
         val throughput = (totalBytes.toDouble) / (meanTime * 1000); // MB/s (1000 to get from B/ms to MB/s )
         throughput
       },
@@ -59,8 +59,8 @@ object SizedThroughput {
     val parallelismPlot = paramData.plotAlong(
       mainAxis = (params: Params) => params.numberOfPairs,
       groupings = (params: Params) => (params.messageSize, params.batchSize, params.numberOfBatches),
-      plotId = (params: (Long, Long, Long)) => s"ms-${params._1}-bs-${params._2}-nob-${params._3}",
-      plotParams = (params: (Long, Long, Long)) =>
+      plotId = (params: (Int, Int, Int)) => s"ms-${params._1}-bs-${params._2}-nob-${params._3}",
+      plotParams = (params: (Int, Int, Int)) =>
         List(s"Message Size (bytes) = ${params._1}" +
           s"", s"Messages per batch = ${params._2}" +
           s"", s"Number of Batches = ${params._3})"),
@@ -70,13 +70,14 @@ object SizedThroughput {
       xAxisId = "parallelism",
       yAxisLabel = "execution time (ms)",
       units = "ms",
-      calculateParams = (params: (Long, Long, Long)) => {
-        params._1 * params._2 * params._3 // total bytes per pair
+      calculateParams = (params: (Int, Int, Int)) => {
+        params._1.toLong * params._2.toLong * params._3.toLong // total bytes per pair
       },
-      calculateValue = (totalMessagesPerPair: Long, pairs: Long, stats: Statistics) => {
-        val totalBytes = totalMessagesPerPair * pairs;
+      calculateValue = (totalMessagesPerPair: Long, pairs: Int, stats: Statistics) => {
+        val totalBytes = totalMessagesPerPair * pairs.toLong;
         val meanTime = stats.sampleMean;
-        val throughput = (totalBytes.toDouble) / (meanTime * 1000); // MB/s (1000 to get from B/ms to MB/s )
+        val throughput = (totalBytes.toLong) / (meanTime * 1000); // MB/s (1000 to get from B/ms to MB/s )
+        println("pairs: " + pairs + ", totalBytes: " + totalBytes + ", throughput: " + throughput);
         throughput
       },
       calculatedTitle = "Throughput",
@@ -87,8 +88,8 @@ object SizedThroughput {
     val batchCountPlot = paramData.plotAlong(
       mainAxis = (params: Params) => params.numberOfBatches,
       groupings = (params: Params) => (params.messageSize, params.numberOfPairs, params.batchSize),
-      plotId = (params: (Long, Long, Long)) => s"np-${params._1}-ps-${params._2}-static-${params._3}",
-      plotParams = (params: (Long, Long, Long)) =>
+      plotId = (params: (Int, Int, Int)) => s"np-${params._1}-ps-${params._2}-static-${params._3}",
+      plotParams = (params: (Int, Int, Int)) =>
         List(s"Message Size (bytes) = ${params._1}", s"Number of Pairs = ${params._2}", s"Batch Size = ${params._3})"),
       plotTitle = "Execution Time",
       xAxisLabel = "number of batches per pair",
@@ -96,7 +97,7 @@ object SizedThroughput {
       xAxisId = "number-of-batches",
       yAxisLabel = "execution time (ms)",
       units = "ms",
-      calculateParams = (params: (Long, Long, Long)) => {
+      calculateParams = (params: (Int, Int, Int)) => {
         params._1 * params._2 * params._3 // bytes per batch
       },
       calculateValue = (bytesPerBatch: Long, numberOfBatches: Long, stats: Statistics) => {
@@ -113,8 +114,8 @@ object SizedThroughput {
     val pipelinePlot = paramData.plotAlong(
       mainAxis = (params: Params) => params.batchSize,
       groupings = (params: Params) => (params.numberOfBatches, params.numberOfPairs, params.messageSize),
-      plotId = (params: (Long, Long, Long)) => s"nob-${params._1}-nop-${params._2}-ms-${params._3}",
-      plotParams = (params: (Long, Long, Long)) =>
+      plotId = (params: (Int, Int, Int)) => s"nob-${params._1}-nop-${params._2}-ms-${params._3}",
+      plotParams = (params: (Int, Int, Int)) =>
         List(s"number of batches = ${params._1}",
           s"number of pairs = ${params._2}",
           s"message size = ${params._3})"),
@@ -124,12 +125,12 @@ object SizedThroughput {
       xAxisId = "batch-size",
       yAxisLabel = "execution time (ms)",
       units = "ms",
-      calculateParams = (params: (Long, Long, Long)) => {
-        params._1 * params._2 * params._3 // aggregate=(bytes per run/batchSize)
+      calculateParams = (params: (Int, Int, Int)) => {
+        params._1.toLong * params._2.toLong * params._3.toLong // aggregate=(bytes per run/batchSize)
       },
-      calculateValue = (aggregate: Long, batchSize: Long, stats: Statistics) => {
-        val totalBytes = aggregate * batchSize;
-        val meanTime = stats.sampleMean;
+      calculateValue = (aggregate: Long, batchSize: Int, stats: Statistics) => {
+        val totalBytes = aggregate.toLong * batchSize.toLong;
+        val meanTime = stats.sampleMean.toLong;
         val throughput = (totalBytes.toDouble) / (meanTime * 1000); // MB/s (1000 to get from B/ms to MB/s )
         throughput
       },
