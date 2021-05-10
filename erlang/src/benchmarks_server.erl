@@ -8,6 +8,7 @@
          'PingPong'/3,
          'NetPingPong'/3,
          'ThroughputPingPong'/3,
+         'Fibonacci'/3,
          'NetThroughputPingPong'/3,
          'AtomicRegister'/3,
          'SizedThroughput'/3]).
@@ -32,6 +33,9 @@
       batch_size => integer(),
       number_of_batches => integer(),
       number_of_pairs => integer()}.
+
+-type 'FibonacciRequest'() ::
+    #{fib_number => integer()}.
 
 -type 'TestResult'() ::
     #{sealed_value =>
@@ -96,6 +100,12 @@ decoder() -> benchmarks.
     {'TestResult'(), grpc:stream()} | grpc:error_response().
 %% This is a unary RPC
 'ThroughputPingPong'(_Message, Stream, _State) ->
+    {#{}, Stream}.
+
+-spec 'Fibonacci'(Message::'FibonacciRequest'(), Stream::grpc:stream(), State::any()) ->
+    {'TestResult'(), grpc:stream()} | grpc:error_response().
+%% This is a unary RPC
+'Fibonacci'(_Message, Stream, _State) ->
     {#{}, Stream}.
 
 -spec 'NetThroughputPingPong'(Message::'ThroughputPingPongRequest'(), Stream::grpc:stream(), State::any()) ->

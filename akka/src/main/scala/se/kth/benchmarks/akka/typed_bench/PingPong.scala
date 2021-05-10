@@ -94,7 +94,7 @@ object PingPong extends Benchmark {
     def apply(): Behavior[SystemMessage] = Behaviors.setup(context => new SystemSupervisor(context));
   }
 
-  class SystemSupervisor(context: ActorContext[SystemMessage]) extends AbstractBehavior[SystemMessage] {
+  class SystemSupervisor(context: ActorContext[SystemMessage]) extends AbstractBehavior[SystemMessage](context) {
 
     var pinger: ActorRef[MsgForPinger] = null
     var ponger: ActorRef[Ping] = null
@@ -143,7 +143,7 @@ object PingPong extends Benchmark {
   }
 
   class Pinger(context: ActorContext[MsgForPinger], latch: CountDownLatch, count: Long, ponger: ActorRef[Ping])
-      extends AbstractBehavior[MsgForPinger] {
+      extends AbstractBehavior[MsgForPinger](context) {
     var countDown = count;
     val selfRef = context.self
 
@@ -167,7 +167,7 @@ object PingPong extends Benchmark {
     def apply(): Behavior[Ping] = Behaviors.setup(context => new Ponger(context))
   }
 
-  class Ponger(context: ActorContext[Ping]) extends AbstractBehavior[Ping] {
+  class Ponger(context: ActorContext[Ping]) extends AbstractBehavior[Ping](context) {
     override def onMessage(msg: Ping): Behavior[Ping] = {
       msg.src ! Pong;
       this

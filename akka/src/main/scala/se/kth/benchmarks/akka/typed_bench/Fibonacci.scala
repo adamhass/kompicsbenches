@@ -78,7 +78,7 @@ object Fibonacci extends Benchmark {
   }
 
   class SystemSupervisor(context: ActorContext[SystemSupervisor.SystemMessage])
-      extends AbstractBehavior[SystemSupervisor.SystemMessage] {
+      extends AbstractBehavior[SystemSupervisor.SystemMessage](context) {
     import SystemSupervisor._;
 
     private var fib: ActorRef[FibonacciMsg] = null;
@@ -117,12 +117,12 @@ object Fibonacci extends Benchmark {
       Behaviors.setup(context => new FibonacciActor(context, Left(parent)));
   }
 
-  class FibonacciActor(val context: ActorContext[FibonacciMsg],
+  class FibonacciActor(context: ActorContext[FibonacciMsg],
                        val reportTo: Either[ActorRef[FibonacciMsg], CountDownLatch])
-      extends AbstractBehavior[FibonacciMsg] {
+      extends AbstractBehavior[FibonacciMsg](context) {
     import FibonacciMsg._;
 
-    context.setLoggerClass(this.getClass);
+    context.setLoggerName(this.getClass);
     val log = context.log;
     val selfRef = context.self
 
