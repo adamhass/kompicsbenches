@@ -670,6 +670,12 @@ pub(crate) mod tests {
         ) -> Result<Box<dyn AbstractDistributedBenchmark>, NotImplementedError> {
             Ok(Test3B {}.into())
         }
+
+        fn sized_throughput(
+            &self,
+        ) -> Result<Box<dyn AbstractDistributedBenchmark>, NotImplementedError> {
+            Ok(Test3B {}.into())
+        }
     }
 
     #[test]

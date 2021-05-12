@@ -1,7 +1,7 @@
 use super::*;
 use benchmark_suite_shared::benchmark_runner::{not_implemented, run, run_async};
 use benchmark_suite_shared::kompics_benchmarks::{benchmarks, benchmarks_grpc, messages};
-use futures::future::Future;
+use benchfutures::future::Future;
 
 #[derive(Clone)]
 pub struct BenchmarkRunnerImpl;

@@ -878,6 +878,10 @@ mod tests {
             Ok(TestLocalBench {}.into())
         }
 
+        fn atomic_broadcast(&self) -> Result<Box<dyn AbstractDistributedBenchmark>, NotImplementedError> {
+            Ok(TestDistributedBench::new().into())
+        }
+
         fn sized_throughput(
             &self,
         ) -> Result<Box<dyn AbstractDistributedBenchmark>, NotImplementedError> {
@@ -1035,6 +1039,16 @@ mod tests {
         {
             grpc::SingleResponse::completed(benchmark_runner::not_implemented())
         }
+
+        fn atomic_broadcast(
+            &self,
+            _o: grpc::RequestOptions,
+            _p: benchmarks::AtomicBroadcastRequest,
+        ) -> grpc::SingleResponse<messages::TestResult>
+        {
+            grpc::SingleResponse::completed(benchmark_runner::not_implemented())
+        }
+
     }
 
     #[test]
