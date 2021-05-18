@@ -72,5 +72,12 @@ class TypedBenchmarkRunnerImpl extends BenchmarkRunnerGrpc.BenchmarkRunner {
     Future.successful(NotImplemented());
   }
 
-  override def sizedThroughput(request: SizedThroughputRequest): Future[TestResult] = Future.successful(NotImplemented());
+  override def sizedThroughput(request: SizedThroughputRequest): Future[TestResult] = {
+    Future.successful(NotImplemented());
+    /*Future {
+      val res = BenchmarkRunner.run(typed_bench.SizedThroughput)(request);
+      val msg = BenchmarkRunner.resultToTestResult(res);
+      msg
+    }*/
+  }
 }

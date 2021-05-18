@@ -172,7 +172,7 @@ object StreamingWindows extends DistributedBenchmark {
 
   object MasterSupervisor {
     sealed trait SystemMessage;
-    case class StartSources(replyTo: ActorRef[List[ActorReference]], numberOfPartitions: Int) extends SystemMessage;
+    case class StartSources(sources: ActorRef[List[ActorReference]], numberOfPartitions: Int) extends SystemMessage;
     case class StartSinks(replyTo: ActorRef[OperationSucceeded.type],
                           latch: CountDownLatch,
                           windowers: List[ActorReference],

@@ -2,7 +2,7 @@ name := "Akka Benchmark Suite"
 
 organization in ThisBuild := "se.kth.benchmarks"
 
-version in ThisBuild := "0.3.1-SNAPSHOT"
+version in ThisBuild := "0.3.0-SNAPSHOT"
 
 scalaVersion in ThisBuild := "2.12.9"
 
