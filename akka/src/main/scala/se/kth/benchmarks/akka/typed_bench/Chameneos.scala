@@ -8,12 +8,15 @@ import se.kth.benchmarks.akka.ActorSystemProvider
 import se.kth.benchmarks.Benchmark
 import se.kth.benchmarks.helpers.ChameneosColour
 import kompics.benchmarks.benchmarks.ChameneosRequest
+
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 import scala.util.Try
 import java.util.concurrent.CountDownLatch
 import com.typesafe.scalalogging.StrictLogging
+
+import scala.language.postfixOps
 
 object Chameneos extends Benchmark {
 

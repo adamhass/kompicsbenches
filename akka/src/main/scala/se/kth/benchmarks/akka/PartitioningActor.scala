@@ -1,7 +1,6 @@
 package se.kth.benchmarks.akka
 
 import java.util.concurrent.CountDownLatch
-
 import akka.actor.{Actor, ActorRef}
 import akka.event.Logging
 import akka.serialization.Serializer
@@ -18,6 +17,7 @@ import akka.actor.ActorLogging
 import se.kth.benchmarks.test.KVTestUtil.{KVTimestamp, ReadInvokation, ReadResponse, WriteInvokation, WriteResponse}
 
 import scala.collection.immutable.List
+import scala.language.postfixOps
 
 class PartitioningActor(prepare_latch: CountDownLatch,
                         finished_latch: Option[CountDownLatch],

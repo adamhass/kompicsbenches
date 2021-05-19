@@ -1,7 +1,6 @@
 package se.kth.benchmarks.akka.typed_bench
 
 import java.util.concurrent.CountDownLatch
-
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.scaladsl.AskPattern._
@@ -11,19 +10,14 @@ import scalapb.GeneratedMessage
 import se.kth.benchmarks.Benchmark
 import se.kth.benchmarks.akka.ActorSystemProvider
 import se.kth.benchmarks.akka.bench.ThroughputPingPong.{Conf, Ping}
-import se.kth.benchmarks.akka.typed_bench.ThroughputPingPong.SystemSupervisor.{
-  GracefulShutdown,
-  OperationSucceeded,
-  RunIteration,
-  StartActors,
-  StopActors,
-  SystemMesssage
-}
+import se.kth.benchmarks.akka.typed_bench.ThroughputPingPong.SystemSupervisor.{GracefulShutdown, OperationSucceeded, RunIteration, StartActors, StopActors, SystemMesssage}
 
 import scala.util.Try
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 import com.typesafe.scalalogging.StrictLogging
+
+import scala.language.postfixOps
 
 object ThroughputPingPong extends Benchmark {
   override type Conf = ThroughputPingPongRequest

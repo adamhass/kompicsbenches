@@ -1,7 +1,6 @@
 package se.kth.benchmarks.akka.typed_bench
 
 import java.util.concurrent.CountDownLatch
-
 import akka.actor.typed.{ActorRef, ActorRefResolver, ActorSystem, Behavior}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.scaladsl.AskPattern._
@@ -12,18 +11,14 @@ import scalapb.GeneratedMessage
 import se.kth.benchmarks.{DeploymentMetaData, DistributedBenchmark}
 import se.kth.benchmarks.akka.{ActorSystemProvider, SerializerBindings, SerializerIds}
 import se.kth.benchmarks.akka.typed_bench.NetThroughputPingPong.ClientSystemSupervisor.StartPongers
-import se.kth.benchmarks.akka.typed_bench.NetThroughputPingPong.SystemSupervisor.{
-  OperationSucceeded,
-  RunIteration,
-  StartPingers,
-  StopPingers,
-  SystemMessage
-}
+import se.kth.benchmarks.akka.typed_bench.NetThroughputPingPong.SystemSupervisor.{OperationSucceeded, RunIteration, StartPingers, StopPingers, SystemMessage}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.util.{Failure, Success, Try}
 import com.typesafe.scalalogging.StrictLogging
+
+import scala.language.postfixOps
 
 object NetThroughputPingPong extends DistributedBenchmark {
   case class ActorReference(actorPath: String)

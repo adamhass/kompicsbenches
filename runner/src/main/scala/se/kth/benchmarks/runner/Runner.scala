@@ -110,9 +110,9 @@ class Runner(conf: Conf, stub: Runner.Stub) extends LazyLogging {
         case Success(r) => {
           r match {
             case TestResult.Empty    => logger.warn(s"Benchmark ${b.name} invocation was empty.")
-            case TestFailure(reason) => logger.warn(s"Benchmark ${b.name} invocation failed: ${reason}")
-            case NotImplemented()    => logger.info(s"Benchmark ${b.name} is not implemented.")
-            case TestSuccess(nRuns, data) => {
+            case TestFailure(reason, _) => logger.warn(s"Benchmark ${b.name} invocation failed: ${reason}")
+            case NotImplemented(_)    => logger.info(s"Benchmark ${b.name} is not implemented.")
+            case TestSuccess(nRuns, data, _) => {
               logger.info(s"Benchmark ${b.name} run [$i/$numRuns] finished successfully with ${nRuns} runs.");
               sinks.foreach(_.sink(b.symbol, p, data));
             }

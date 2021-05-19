@@ -2,16 +2,15 @@ name := "Akka Benchmark Suite"
 
 organization in ThisBuild := "se.kth.benchmarks"
 
-version in ThisBuild := "0.3.0-SNAPSHOT"
+version in ThisBuild := "0.3.1-SNAPSHOT"
 
 scalaVersion in ThisBuild := "2.12.9"
 
 resolvers += Resolver.mavenLocal
 
 val akkaV = "2.6.14"
-
 libraryDependencies ++= Seq(
-  "se.kth.benchmarks" %% "benchmark-suite-shared" % "1.0.0-SNAPSHOT",
+  "se.kth.benchmarks" %% "benchmark-suite-shared" % "1.0.1-SNAPSHOT",
   "com.typesafe.akka" %% "akka-actor" % akkaV,
   "com.typesafe.akka" %% "akka-remote" % akkaV,
   "com.typesafe.akka" %% "akka-actor-typed" % akkaV,
@@ -24,17 +23,12 @@ fork := true;
 
 test in assembly := {}
 
-
-assemblyMergeStrategy in assembly := {
-  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
-  case x => MergeStrategy.first
-}
-/*
 assemblyMergeStrategy in assembly := {
   case "META-INF/io.netty.versions.properties" => MergeStrategy.first
+  case PathList(ps @ _*) if ps.last endsWith ".proto" => MergeStrategy.first
   case x =>
     val oldStrategy = (assemblyMergeStrategy in assembly).value
     oldStrategy(x)
-} */
+}
 
 parallelExecution in ThisBuild := false

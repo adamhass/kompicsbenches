@@ -11,7 +11,6 @@ import scala.concurrent.{Await, ExecutionContext, Future, Promise}
 import scala.concurrent.duration._
 import java.util.concurrent.{CountDownLatch, TimeUnit, TimeoutException}
 import java.util.UUID.randomUUID
-
 import kompics.benchmarks.benchmarks.AtomicRegisterRequest
 import scalapb.GeneratedMessage
 import se.kth.benchmarks.{DeploymentMetaData, DistributedBenchmark}
@@ -27,6 +26,8 @@ import se.kth.benchmarks.test.KVTestUtil.{KVTimestamp, ReadInvokation, ReadRespo
 
 import scala.collection.immutable.List
 import scala.collection.mutable.ListBuffer
+import scala.language.postfixOps
+import scala.math.Ordering.Implicits._
 
 object AtomicRegister extends DistributedBenchmark {
 
@@ -267,8 +268,8 @@ object AtomicRegister extends DistributedBenchmark {
 
   class AtomicRegisterActor(context: ActorContext[AtomicRegisterMessage], read_workload: Float, write_workload: Float, testing: Boolean)
       extends AbstractBehavior[AtomicRegisterMessage](context) {
-    implicit def addComparators[A](x: A)(implicit o: math.Ordering[A]): o.Ops =
-      o.mkOrderingOps(x); // for tuple comparison
+    // implicit def addComparators[A](x: A)(implicit o: math.Ordering[A]): o.Ops =
+    //  o.mkOrderingOps(x); // for tuple comparison
 //    val logger = context.log
 
     var nodes: List[ActorRef[AtomicRegisterMessage]] = _

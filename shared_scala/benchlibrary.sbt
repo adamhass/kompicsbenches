@@ -2,7 +2,7 @@ name := "Benchmark Suite Shared"
 
 organization in ThisBuild := "se.kth.benchmarks"
 
-version in ThisBuild := "1.0.0-SNAPSHOT"
+version in ThisBuild := "1.0.1-SNAPSHOT"
 
 scalaVersion in ThisBuild := "2.12.9"
 
@@ -23,6 +23,6 @@ libraryDependencies ++= Seq(
 
 fork := true;
 
-PB.targets in Compile := Seq(
-  scalapb.gen() -> (sourceManaged in Compile).value
+Compile / PB.targets := Seq(
+  scalapb.gen() -> (Compile / sourceManaged).value / "scalapb"
 )

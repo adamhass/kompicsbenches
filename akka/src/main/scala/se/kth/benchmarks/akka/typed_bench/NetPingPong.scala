@@ -2,7 +2,6 @@ package se.kth.benchmarks.akka.typed_bench
 
 import java.nio.ByteOrder
 import java.util.concurrent.CountDownLatch
-
 import akka.actor.typed.{ActorRef, ActorRefResolver, ActorSystem, Behavior}
 import kompics.benchmarks.benchmarks.PingPongRequest
 import se.kth.benchmarks.{DeploymentMetaData, DistributedBenchmark}
@@ -11,18 +10,14 @@ import akka.actor.typed.scaladsl.AskPattern._
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.serialization.Serializer
 import akka.util.{ByteString, Timeout}
-import se.kth.benchmarks.akka.typed_bench.NetPingPong.SystemSupervisor.{
-  OperationSucceeded,
-  RunPinger,
-  StartPinger,
-  StopPinger,
-  SystemMessage
-}
+import se.kth.benchmarks.akka.typed_bench.NetPingPong.SystemSupervisor.{OperationSucceeded, RunPinger, StartPinger, StopPinger, SystemMessage}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.util.{Success, Try}
 import com.typesafe.scalalogging.StrictLogging
+
+import scala.language.postfixOps
 
 object NetPingPong extends DistributedBenchmark {
 

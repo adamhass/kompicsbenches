@@ -1,7 +1,6 @@
 package se.kth.benchmarks.akka.bench
 
 import java.util.concurrent.CountDownLatch
-
 import akka.actor._
 import akka.serialization.Serializer
 import akka.util.ByteString
@@ -12,6 +11,7 @@ import se.kth.benchmarks.akka.{ActorSystemProvider, SerializerBindings, Serializ
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
+import scala.language.postfixOps
 import scala.util.Try
 
 object SizedThroughput extends DistributedBenchmark {
