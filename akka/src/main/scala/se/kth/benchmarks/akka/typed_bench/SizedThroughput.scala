@@ -59,7 +59,7 @@ object SizedThroughput extends DistributedBenchmark {
         ++ ", message size: " ++ messageSize.toString
         ++ " batchSize: " ++ batchSize.toString
         ++ ", batchCount: " ++ batchCount.toString);
-      this.system = ActorSystemProvider.newRemoteTypedActorSystem[SystemMessage](SystemSupervisor(), "sizedthroughput",
+      this.system = ActorSystemProvider.newRemoteTypedActorSystem[SystemMessage](SystemSupervisor(), "sizedthroughput_supervisor",
         Runtime.getRuntime.availableProcessors(),
         serializers);
       ClientParams(numPairs, batchSize)
@@ -116,7 +116,7 @@ object SizedThroughput extends DistributedBenchmark {
 
     override def setup(c: ClientConf): ClientData = {
       logger.info("Setting up Client, numPairs: " ++ c.numPairs.toString ++ " batchSize: " ++ c.batchSize.toString);
-      system = ActorSystemProvider.newRemoteTypedActorSystem[StartSinks](ClientSystemSupervisor(), name = "sizedthroughput", threads = 1, serialization = serializers);
+      system = ActorSystemProvider.newRemoteTypedActorSystem[StartSinks](ClientSystemSupervisor(), name = "sizedthroughput-clientsupervisor", threads = 1, serialization = serializers);
       implicit val timeout: Timeout = 3.seconds;
       implicit val scheduler = system.scheduler;
       val f: Future[ClientRefs] = system.ask(ref => StartSinks(ref, c.numPairs, c.batchSize));

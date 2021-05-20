@@ -53,7 +53,7 @@ object SizedThroughput extends DistributedBenchmark {
         ++ ", message size: " ++ messageSize.toString
         ++ " batchSize: " ++ batchSize.toString
         ++  ", batchCount: " ++ batchCount.toString);
-      this.system = ActorSystemProvider.newRemoteActorSystem(name = "sizedthroughput",
+      this.system = ActorSystemProvider.newRemoteActorSystem(name = "sizedthroughput_supervisor",
                                                              threads = Runtime.getRuntime.availableProcessors(),
                                                              serialization = serializers);
       ClientParams(numPairs, batchSize)
@@ -105,7 +105,7 @@ object SizedThroughput extends DistributedBenchmark {
 
     override def setup(c: ClientConf): ClientData = {
       logger.info("Setting up Client, numPairs: " ++ c.numPairs.toString ++ " batchSize: " ++ c.batchSize.toString);
-      system = ActorSystemProvider.newRemoteActorSystem(name = "sizedthroughput", threads = 1, serialization = serializers);
+      system = ActorSystemProvider.newRemoteActorSystem(name = "sizedthroughput-clientsupervisor", threads = 1, serialization = serializers);
       sinks = (1 to c.numPairs).map(i => system.actorOf(Props(new Sink(c.batchSize)), s"sink$i")).toList;
 
       val paths = sinks.map(sink => ActorSystemProvider.actorPathForRef(sink, system));
