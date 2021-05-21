@@ -68,7 +68,7 @@ object SizedThroughput extends DistributedBenchmark {
     override def prepareIteration(d: List[ClientData]): Unit = {
       if (setting_up) {
         // Only create sources the first time
-        logger.debug("Preparing first iteration");
+        logger.info("Preparing first iteration");
         implicit val timeout: Timeout = 3.seconds;
         implicit val scheduler = system.scheduler;
         val f: Future[OperationSucceeded.type] =
@@ -85,11 +85,12 @@ object SizedThroughput extends DistributedBenchmark {
         }; */
         setting_up = false;
       } else {
-        logger.debug("Preparing iteration");
+        logger.info("Preparing iteration");
       }
     }
 
     override def runIteration(): Unit = {
+      logger.info("running iteration");
       latch = new CountDownLatch(numPairs);
       system ! RunIteration(latch);
       latch.await();
@@ -127,7 +128,7 @@ object SizedThroughput extends DistributedBenchmark {
       val ready = Await.ready(f, 5.seconds);
       ready.value.get match {
         case Success(paths) => {
-          logger.trace(s"Sink Paths are ${paths.actorPaths.mkString}");
+          logger.info(s"Sink Paths are ${paths.actorPaths.mkString}");
           paths
         }
         case Failure(e) => ClientRefs(List.empty)
@@ -136,11 +137,11 @@ object SizedThroughput extends DistributedBenchmark {
 
     override def prepareIteration(): Unit = {
       // nothing
-      logger.debug("Preparing Sink iteration");
+      logger.info("Preparing Sink iteration");
     }
 
     override def cleanupIteration(lastIteration: Boolean): Unit = {
-      logger.debug("Cleaning up Sink side");
+      logger.info("Cleaning up Sink side");
       if (lastIteration) {
         system.terminate();
         Await.ready(system.whenTerminated, 5.seconds);
@@ -231,6 +232,7 @@ object SizedThroughput extends DistributedBenchmark {
           this
         }
         case RunIteration(latch) => {
+          context.log.info(s"Running iteration with ${sources.length} sources");
           sources.foreach(source => source ! Start(latch))
           this
         }

@@ -77,7 +77,7 @@ object SizedThroughput {
         val totalBytes = totalMessagesPerPair * pairs.toLong;
         val meanTime = stats.sampleMean;
         val throughput = (totalBytes.toLong) / (meanTime * 1000); // MB/s (1000 to get from B/ms to MB/s )
-        println("pairs: " + pairs + ", totalBytes: " + totalBytes + ", throughput: " + throughput);
+        // println("pairs: " + pairs + ", totalBytes: " + totalBytes + ", throughput: " + throughput);
         throughput
       },
       calculatedTitle = "Throughput",
