@@ -10,7 +10,7 @@ import kompics.benchmarks.benchmarks.SizedThroughputRequest
 import se.kth.benchmarks.akka.typed_bench.NetThroughputPingPong.ActorReference
 import se.kth.benchmarks.akka.typed_bench.SizedThroughput.ClientSystemSupervisor.StartSinks
 import se.kth.benchmarks.akka.typed_bench.SizedThroughput.SystemSupervisor.{OperationSucceeded, RunIteration, StartSources, StopSources, SystemMessage}
-import se.kth.benchmarks.akka.typed_bench.SizedThroughput.{Sink, Source}
+import se.kth.benchmarks.akka.typed_bench.SizedThroughput.{Sink, Source, Ack, MsgForStaticSource}
 import se.kth.benchmarks.akka.{ActorSystemProvider, SerUtils, SerializerBindings, SerializerIds}
 import se.kth.benchmarks.{DeploymentMetaData, DistributedBenchmark}
 
@@ -34,7 +34,7 @@ object SizedThroughput extends DistributedBenchmark {
     .empty()
     .addSerializer[SizedThroughputSerializer](SizedThroughputSerializer.NAME)
     .addBinding[SizedThroughputMessage](SizedThroughputSerializer.NAME)
-    .addBinding[Ack](SizedThroughputSerializer.NAME);
+    .addBinding[MsgForStaticSource](SizedThroughputSerializer.NAME);
 
   class MasterImpl extends Master with StrictLogging {
 
@@ -250,7 +250,7 @@ object SizedThroughput extends DistributedBenchmark {
 
   sealed trait MsgForStaticSource
   case class Start(latch: CountDownLatch) extends MsgForStaticSource
-  case class Ack() extends MsgForStaticSource
+  case object Ack extends MsgForStaticSource
 
   case class SizedThroughputMessage(aux: Int, data: Array[Byte], src: ActorReference);
 
@@ -280,7 +280,7 @@ object SizedThroughput extends DistributedBenchmark {
           SerUtils.stringIntoByteString(br, src.actorPath);
           br.result().toArray
         };
-        case Ack() => Array(ACK_FLAG)
+        case Ack => Array(ACK_FLAG)
       }
     }
 
@@ -338,7 +338,7 @@ object SizedThroughput extends DistributedBenchmark {
           send();
           send();
         }
-        case Ack() => {
+        case Ack => {
           ackedBatches += 1;
           if (sentBatches < batchCount) {
             send();
@@ -361,7 +361,7 @@ object SizedThroughput extends DistributedBenchmark {
     var received = 0;
     val resolver = ActorRefResolver(context.system)
 
-    private def getSourceRef(a: ActorReference): ActorRef[Ack] = {
+    private def getSourceRef(a: ActorReference): ActorRef[MsgForStaticSource] = {
       resolver.resolveActorRef(a.actorPath)
     }
 
@@ -371,7 +371,7 @@ object SizedThroughput extends DistributedBenchmark {
           received += aux.toInt;
           if (received == batchSize) {
             received = 0;
-            getSourceRef(sender) ! Ack();
+            getSourceRef(sender) ! Ack;
           }
           this
         }
