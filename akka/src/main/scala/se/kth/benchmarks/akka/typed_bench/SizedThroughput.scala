@@ -280,7 +280,7 @@ object SizedThroughput extends DistributedBenchmark {
           SerUtils.stringIntoByteString(br, src.actorPath);
           br.result().toArray
         };
-        case Ack => Array(ACK_FLAG)
+        case Ack() => Array(ACK_FLAG)
       }
     }
 
