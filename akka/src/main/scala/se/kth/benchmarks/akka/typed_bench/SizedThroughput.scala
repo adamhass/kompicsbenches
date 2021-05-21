@@ -34,7 +34,7 @@ object SizedThroughput extends DistributedBenchmark {
     .empty()
     .addSerializer[SizedThroughputSerializer](SizedThroughputSerializer.NAME)
     .addBinding[SizedThroughputMessage](SizedThroughputSerializer.NAME)
-    .addBinding[Ack.type](SizedThroughputSerializer.NAME);
+    .addBinding[Ack](SizedThroughputSerializer.NAME);
 
   class MasterImpl extends Master with StrictLogging {
 
