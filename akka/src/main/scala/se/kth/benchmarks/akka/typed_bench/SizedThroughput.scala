@@ -72,7 +72,7 @@ object SizedThroughput extends DistributedBenchmark {
         implicit val timeout: Timeout = 3.seconds;
         implicit val scheduler = system.scheduler;
         val f: Future[OperationSucceeded.type] =
-          system.ask(ref => StartSources(ref, latch, messageSize, batchSize, batchCount, ClientRefs(sources.map(source => source.toString))));
+          system.ask(ref => StartSources(ref, latch, messageSize, batchSize, batchCount, d.head));
         // val sinksF =
         //  Future.sequence(d.head.actorPaths.map(sinkPath => system.actorSelection(sinkPath).resolveOne(5 seconds)));
         // val sinks = Await.result(sinksF, 5 seconds);
