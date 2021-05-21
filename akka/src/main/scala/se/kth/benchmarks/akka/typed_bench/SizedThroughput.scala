@@ -332,6 +332,7 @@ object SizedThroughput extends DistributedBenchmark {
     override def onMessage(msg: MsgForStaticSource): Behavior[MsgForStaticSource] = {
       msg match {
         case Start(new_latch) => {
+          context.log.info("Source starting");
           sentBatches = 0;
           ackedBatches = 0;
           latch = new_latch;
@@ -344,6 +345,7 @@ object SizedThroughput extends DistributedBenchmark {
             send();
           } else if (ackedBatches == batchCount) {
             // Done
+            context.log.info("Source done");
             latch.countDown();
           }
         }
