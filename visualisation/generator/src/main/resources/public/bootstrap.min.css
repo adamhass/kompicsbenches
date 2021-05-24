@@ -35,6 +35,10 @@
 	--font-family-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace
 }
 
+.highcharts-credits {
+    display: none;
+}
+
 *, ::after, ::before {
 	box-sizing: border-box
 }

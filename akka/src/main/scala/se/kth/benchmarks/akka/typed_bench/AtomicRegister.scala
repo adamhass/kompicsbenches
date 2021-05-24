@@ -78,7 +78,7 @@ object AtomicRegister extends DistributedBenchmark {
       this.system = ActorSystemProvider.newRemoteTypedActorSystem[SystemSupervisor.SystemMessage](
         SystemSupervisor(),
         s"atomicreg_supervisor${randomUUID()}",
-        4,
+        Runtime.getRuntime.availableProcessors(),
         serializers
       )
 

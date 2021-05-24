@@ -60,7 +60,7 @@ abstract class ExperimentPlots[Params <: Parameters.Message[Params]](val bench: 
           .toList;
         val sortedCalculatedSeries: List[Series] = calculatedSeries.sortBy(_._1).map(t => t._2);
         val pimpedCalculatedSeries: List[Series] = sortedCalculatedSeries.map(series => {
-          series.addMeta("tooltip" -> JsRaw(s"{valueDecimals: 2, valueSuffix: '${units}'}"))
+          series.addMeta("tooltip" -> JsRaw(s"{valueDecimals: 2, valueSuffix: '${calculatedUnits}'}"))
           .addMeta(  "color" -> JsRaw(FrameworkPlotStyle.getColor(series.getName)))
         }
         );
@@ -178,7 +178,7 @@ abstract class ExperimentPlots[Params <: Parameters.Message[Params]](val bench: 
           .toList;
         val sortedCalculatedSeries: List[Series] = calculatedSeries.map(t => t._2);
         val pimpedCalculatedSeries: List[Series] = sortedCalculatedSeries.map(series => {
-          series.addMeta("tooltip" -> JsRaw(s"{valueDecimals: 2, valueSuffix: '${units}'}"))
+          series.addMeta("tooltip" -> JsRaw(s"{valueDecimals: 2, valueSuffix: '${calculatedUnits}'}"))
             .addMeta(  "color" -> JsRaw(FrameworkPlotStyle.getColor(series.getName)))
         }
         );

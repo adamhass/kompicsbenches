@@ -13,14 +13,13 @@ object FrameworkPlotStyle {
     "'Kompics Scala 1.x'" -> "'Violet'",
     "'Kompics Scala 2.x'" -> "'DeepPink'",
     "'Riker'" -> "'#2F0272'", // Riker Purple
-    "'Actix'" -> "'Green'", // Too many blue colors : (
+    "'Actix'" -> "'Green'",
   );
 
   def getColor(framework: String): String = {
     val default_color = "'Yellow'"
     if (framework.contains(" error") ) {
       val f = framework.substring(0, framework.indexOf(" error"));
-      println(f);
       Colors.getOrElse(f+"'", default_color)
     } else {
       Colors.getOrElse(framework, default_color)
