@@ -141,8 +141,9 @@ object ActorSystemProvider extends StrictLogging {
         ${serializers}
         ${bindings}
       }
-      remote {
-        enabled-transports = ["akka.remote.netty.tcp"]
+      remote.artery.enabled = false
+      remote.classic {
+        enabled-transports = ["akka.remote.classic.netty.tcp"]
         netty.tcp {
           hostname = "${hostname}"
           port = ${port}
