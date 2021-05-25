@@ -361,7 +361,6 @@ object AtomicRegister extends DistributedBenchmark {
     override def onMessage(msg: AtomicRegisterMessage): Behavior[AtomicRegisterMessage] = {
       msg match {
         case i: Init => {
-          context.log.info("AtomicRegisterActor Init");
           current_run_id = i.init_id
           nodes = for (node <- i.nodes) yield getActorRef[AtomicRegisterMessage](node)
           n = i.nodes.size
@@ -380,12 +379,10 @@ object AtomicRegister extends DistributedBenchmark {
         }
 
         case Run => {
-          context.log.info("AtomicRegisterActor Run");
           invokeOperations()
         }
 
         case Read(src, current_run_id, key, readId) => {
-          context.log.info("AtomicRegisterActor Read");
           val current_state: AtomicRegisterState = register_state(key)
           getActorRef(src) ! Value(selfRef,
                                    current_run_id,
@@ -397,7 +394,6 @@ object AtomicRegister extends DistributedBenchmark {
         }
 
         case v: Value => {
-          context.log.info("AtomicRegisterActor Value");
           if (v.run_id == current_run_id) {
             val current_register = register_state(v.key)
             if (v.rid == current_register.rid) {
@@ -435,7 +431,6 @@ object AtomicRegister extends DistributedBenchmark {
         }
 
         case w: Write => {
-          context.log.info("AtomicRegisterActor Write");
           if (w.run_id == current_run_id) {
             val current_state = register_state(w.key)
             if ((w.ts, w.wr) > (current_state.ts, current_state.wr)) {
@@ -448,7 +443,6 @@ object AtomicRegister extends DistributedBenchmark {
         }
 
         case a: Ack => {
-          context.log.info("AtomicRegisterActor Ack");
           if (a.run_id == current_run_id) {
             val current_register = register_state(a.key)
             if (a.rid == current_register.rid) {

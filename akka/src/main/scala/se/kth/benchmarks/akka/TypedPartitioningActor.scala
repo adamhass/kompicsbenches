@@ -64,7 +64,6 @@ class TypedPartitioningActor(context: ActorContext[PartitioningMessage],
   override def onMessage(msg: PartitioningMessage): Behavior[PartitioningMessage] = {
     msg match {
       case Start => {
-        context.log.info("PartitioningActor Start");
         val min_key: Long = 0L
         val max_key: Long = num_keys - 1
         for ((node, rank) <- active_nodes.zipWithIndex) {
@@ -74,7 +73,6 @@ class TypedPartitioningActor(context: ActorContext[PartitioningMessage],
       }
 
       case InitAck(init_id) => {
-        context.log.info("PartitioningActor InitAck");
         init_ack_count += 1
         if (init_ack_count == n) {
           prepare_latch.countDown()
@@ -82,7 +80,6 @@ class TypedPartitioningActor(context: ActorContext[PartitioningMessage],
       }
 
       case Run => {
-        context.log.info("PartitioningActor Run");
         for (node <- active_nodes) {
           val actorRef = getActorRef(node)
           actorRef ! ATOMICREG_RUN
@@ -90,7 +87,6 @@ class TypedPartitioningActor(context: ActorContext[PartitioningMessage],
       }
 
       case Done => {
-        context.log.info("PartitioningActor Done");
         done_count += 1
         if (done_count == n) {
           finished_latch.get.countDown()
@@ -98,7 +94,6 @@ class TypedPartitioningActor(context: ActorContext[PartitioningMessage],
       }
 
       case TestDone(timestamps) => {
-        context.log.info("PartitioningActor TestDone");
         done_count += 1
         test_results ++= timestamps
         if (done_count == n) test_promise.get.success(test_results.toList)
