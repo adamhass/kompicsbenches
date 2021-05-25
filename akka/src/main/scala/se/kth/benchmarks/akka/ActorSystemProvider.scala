@@ -236,7 +236,10 @@ object ActorSystemProvider extends StrictLogging {
   }
 
   class ExternalAddressExt(system: ExtendedActorSystem) extends Extension {
-    def addressForAkka: Address = system.provider.getDefaultAddress
+    def addressForAkka: Address = {
+      val addr = system.provider.getDefaultAddress
+      addr.copy("akka.tcp", addr.system, addr.host, addr.port)
+    }
   }
 
   def actorPathForRef(ref: ActorRef, system: ActorSystem): String = {
