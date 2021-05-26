@@ -1,3 +1,5 @@
+import sbtassembly.AssemblyPlugin.autoImport.assemblyShadeRules
+
 ThisBuild / organization := "se.kth.benchmarks"
 
 ThisBuild / version := "0.2.0-SNAPSHOT"
@@ -25,7 +27,13 @@ lazy val commonSettings = Seq(
     case x =>
       val oldStrategy = (assemblyMergeStrategy in assembly).value
       oldStrategy(x)
-  }
+  },
+  assemblyShadeRules in assembly := Seq(
+    ShadeRule.rename("io.netty.**" -> "custom_netty.@1")
+      .inLibrary("io.netty" % "netty-all" % "4.1.36.Final")
+      //.inLibrary("se.sics.kompics.basic" % "kompics-component-netty-network" % kompicsV)
+      .inProject
+  )
 );
 
 lazy val root = (project in file("."))
@@ -41,9 +49,10 @@ lazy val shared = (project in file("shared"))
     commonSettings,
     name := "Kompics Benchmark Suite (Shared)",
     libraryDependencies ++= Seq(
-      "se.kth.benchmarks" %% "benchmark-suite-shared" % "1.0.1-SNAPSHOT" excludeAll (
+      "se.kth.benchmarks" %% "benchmark-suite-shared" % "1.0.1-SNAPSHOT",
+/* excludeAll (
         ExclusionRule(organization = "io.netty")
-      ),
+      ),*/
       "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.0",
       "ch.qos.logback" % "logback-classic" % "1.2.3",
       "se.sics.kompics" % "kompics-core" % kompicsV,
@@ -85,11 +94,4 @@ lazy val kompicsScala2x = (project in file("kompicsscala2x"))
     )
   );
 
-// assemblyShadeRules in assembly := Seq(
-//   ShadeRule.rename("io.netty.**" -> "custom_netty.@1")
-//   .inLibrary("io.netty" % "netty-all" % "5.0.0.Alpha3")
-//   .inLibrary("se.sics.kompics.basic" % "kompics-component-netty-network" % kompicsV)
-//   .inProject
-// )
-
-//logLevel in assembly := Level.Debug
+// logLevel in assembly := Level.Debug

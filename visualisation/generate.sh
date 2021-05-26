@@ -2,8 +2,8 @@
 
 JAR="./generator/target/scala-2.12/Benchmark Suite Visualisation Generator-assembly-1.0.0-SNAPSHOT.jar"
 
-# if [ ! -f "$JAR" ]; then
+if [ ! -f "$JAR" ]; then
     sbt generator/assembly
-# fi
+fi
 
 java -jar "$JAR"  $@
