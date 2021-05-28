@@ -138,9 +138,21 @@ object ActorSystemProvider extends StrictLogging {
         }
         provider = remote        
         allow-java-serialization=off
+        remote {
+          artery {
+            transport = tcp
+            canonical.hostname = "${hostname}"
+            canonical.port = ${port}
+          }
+        }
         ${serializers}
         ${bindings}
       }
+    }""";
+    logger.trace(conf);
+    conf
+  };
+      /*
       remote.artery.enabled = false
       remote.classic {
         enabled-transports = ["akka.remote.classic.netty.tcp"]
@@ -149,10 +161,7 @@ object ActorSystemProvider extends StrictLogging {
           port = ${port}
         }
       }
-    }""";
-    logger.trace(conf);
-    conf
-  };
+      */
 
   private lazy val defaultConf = ConfigFactory.parseString(customConfig());
   lazy val config = ConfigFactory.load(defaultConf);
