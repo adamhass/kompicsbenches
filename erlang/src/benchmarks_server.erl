@@ -8,9 +8,13 @@
          'PingPong'/3,
          'NetPingPong'/3,
          'ThroughputPingPong'/3,
-         'Fibonacci'/3,
          'NetThroughputPingPong'/3,
          'AtomicRegister'/3,
+         'StreamingWindows'/3,
+         'Fibonacci'/3,
+         'Chameneos'/3,
+         'AllPairsShortestPath'/3,
+         'AtomicBroadcast'/3,
          'SizedThroughput'/3]).
 
 -type 'PingPongRequest'() ::
@@ -28,6 +32,13 @@
       partition_size => integer(),
       number_of_keys => integer()}.
 
+-type 'StreamingWindowsRequest'() ::
+    #{number_of_partitions => integer(),
+      batch_size => integer(),
+      window_size => string(),
+      number_of_windows => integer(),
+      window_size_amplification => integer()}.
+
 -type 'SizedThroughputRequest'() ::
     #{message_size => integer(),
       batch_size => integer(),
@@ -36,6 +47,22 @@
 
 -type 'FibonacciRequest'() ::
     #{fib_number => integer()}.
+
+-type 'ChameneosRequest'() ::
+    #{number_of_chameneos => integer(),
+      number_of_meetings => integer()}.
+
+-type 'APSPRequest'() ::
+    #{number_of_nodes => integer(),
+      block_size => integer()}.
+
+-type 'AtomicBroadcastRequest'() ::
+    #{algorithm => string(),
+      number_of_nodes => integer(),
+      number_of_proposals => integer(),
+      concurrent_proposals => integer(),
+      reconfiguration => string(),
+      reconfig_policy => string()}.
 
 -type 'TestResult'() ::
     #{sealed_value =>
@@ -102,12 +129,6 @@ decoder() -> benchmarks.
 'ThroughputPingPong'(_Message, Stream, _State) ->
     {#{}, Stream}.
 
--spec 'Fibonacci'(Message::'FibonacciRequest'(), Stream::grpc:stream(), State::any()) ->
-    {'TestResult'(), grpc:stream()} | grpc:error_response().
-%% This is a unary RPC
-'Fibonacci'(_Message, Stream, _State) ->
-    {#{}, Stream}.
-
 -spec 'NetThroughputPingPong'(Message::'ThroughputPingPongRequest'(), Stream::grpc:stream(), State::any()) ->
     {'TestResult'(), grpc:stream()} | grpc:error_response().
 %% This is a unary RPC
@@ -118,6 +139,36 @@ decoder() -> benchmarks.
     {'TestResult'(), grpc:stream()} | grpc:error_response().
 %% This is a unary RPC
 'AtomicRegister'(_Message, Stream, _State) ->
+    {#{}, Stream}.
+
+-spec 'StreamingWindows'(Message::'StreamingWindowsRequest'(), Stream::grpc:stream(), State::any()) ->
+    {'TestResult'(), grpc:stream()} | grpc:error_response().
+%% This is a unary RPC
+'StreamingWindows'(_Message, Stream, _State) ->
+    {#{}, Stream}.
+
+-spec 'Fibonacci'(Message::'FibonacciRequest'(), Stream::grpc:stream(), State::any()) ->
+    {'TestResult'(), grpc:stream()} | grpc:error_response().
+%% This is a unary RPC
+'Fibonacci'(_Message, Stream, _State) ->
+    {#{}, Stream}.
+
+-spec 'Chameneos'(Message::'ChameneosRequest'(), Stream::grpc:stream(), State::any()) ->
+    {'TestResult'(), grpc:stream()} | grpc:error_response().
+%% This is a unary RPC
+'Chameneos'(_Message, Stream, _State) ->
+    {#{}, Stream}.
+
+-spec 'AllPairsShortestPath'(Message::'APSPRequest'(), Stream::grpc:stream(), State::any()) ->
+    {'TestResult'(), grpc:stream()} | grpc:error_response().
+%% This is a unary RPC
+'AllPairsShortestPath'(_Message, Stream, _State) ->
+    {#{}, Stream}.
+
+-spec 'AtomicBroadcast'(Message::'AtomicBroadcastRequest'(), Stream::grpc:stream(), State::any()) ->
+    {'TestResult'(), grpc:stream()} | grpc:error_response().
+%% This is a unary RPC
+'AtomicBroadcast'(_Message, Stream, _State) ->
     {#{}, Stream}.
 
 -spec 'SizedThroughput'(Message::'SizedThroughputRequest'(), Stream::grpc:stream(), State::any()) ->

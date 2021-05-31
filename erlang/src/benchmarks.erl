@@ -68,6 +68,14 @@
         number_of_keys          => non_neg_integer() % = 4, optional, 64 bits
        }.
 
+-type 'StreamingWindowsRequest'() ::
+      #{number_of_partitions    => non_neg_integer(), % = 1, optional, 32 bits
+        batch_size              => non_neg_integer(), % = 2, optional, 64 bits
+        window_size             => iodata(),        % = 3, optional
+        number_of_windows       => non_neg_integer(), % = 4, optional, 64 bits
+        window_size_amplification => non_neg_integer() % = 5, optional, 64 bits
+       }.
+
 -type 'SizedThroughputRequest'() ::
       #{message_size            => non_neg_integer(), % = 1, optional, 32 bits
         batch_size              => non_neg_integer(), % = 2, optional, 32 bits
@@ -77,6 +85,25 @@
 
 -type 'FibonacciRequest'() ::
       #{fib_number              => non_neg_integer() % = 1, optional, 32 bits
+       }.
+
+-type 'ChameneosRequest'() ::
+      #{number_of_chameneos     => non_neg_integer(), % = 1, optional, 32 bits
+        number_of_meetings      => non_neg_integer() % = 2, optional, 64 bits
+       }.
+
+-type 'APSPRequest'() ::
+      #{number_of_nodes         => non_neg_integer(), % = 1, optional, 32 bits
+        block_size              => non_neg_integer() % = 2, optional, 32 bits
+       }.
+
+-type 'AtomicBroadcastRequest'() ::
+      #{algorithm               => iodata(),        % = 1, optional
+        number_of_nodes         => non_neg_integer(), % = 2, optional, 64 bits
+        number_of_proposals     => non_neg_integer(), % = 3, optional, 64 bits
+        concurrent_proposals    => non_neg_integer(), % = 4, optional, 64 bits
+        reconfiguration         => iodata(),        % = 5, optional
+        reconfig_policy         => iodata()         % = 6, optional
        }.
 
 -type 'TestResult'() ::
@@ -112,12 +139,12 @@
       #{
        }.
 
--export_type(['PingPongRequest'/0, 'ThroughputPingPongRequest'/0, 'AtomicRegisterRequest'/0, 'SizedThroughputRequest'/0, 'FibonacciRequest'/0, 'TestResult'/0, 'TestSuccess'/0, 'TestFailure'/0, 'NotImplemented'/0, 'ReadyRequest'/0, 'ReadyResponse'/0, 'ShutdownRequest'/0, 'ShutdownAck'/0]).
+-export_type(['PingPongRequest'/0, 'ThroughputPingPongRequest'/0, 'AtomicRegisterRequest'/0, 'StreamingWindowsRequest'/0, 'SizedThroughputRequest'/0, 'FibonacciRequest'/0, 'ChameneosRequest'/0, 'APSPRequest'/0, 'AtomicBroadcastRequest'/0, 'TestResult'/0, 'TestSuccess'/0, 'TestFailure'/0, 'NotImplemented'/0, 'ReadyRequest'/0, 'ReadyResponse'/0, 'ShutdownRequest'/0, 'ShutdownAck'/0]).
 
--spec encode_msg('PingPongRequest'() | 'ThroughputPingPongRequest'() | 'AtomicRegisterRequest'() | 'SizedThroughputRequest'() | 'FibonacciRequest'() | 'TestResult'() | 'TestSuccess'() | 'TestFailure'() | 'NotImplemented'() | 'ReadyRequest'() | 'ReadyResponse'() | 'ShutdownRequest'() | 'ShutdownAck'(), atom()) -> binary().
+-spec encode_msg('PingPongRequest'() | 'ThroughputPingPongRequest'() | 'AtomicRegisterRequest'() | 'StreamingWindowsRequest'() | 'SizedThroughputRequest'() | 'FibonacciRequest'() | 'ChameneosRequest'() | 'APSPRequest'() | 'AtomicBroadcastRequest'() | 'TestResult'() | 'TestSuccess'() | 'TestFailure'() | 'NotImplemented'() | 'ReadyRequest'() | 'ReadyResponse'() | 'ShutdownRequest'() | 'ShutdownAck'(), atom()) -> binary().
 encode_msg(Msg, MsgName) when is_atom(MsgName) -> encode_msg(Msg, MsgName, []).
 
--spec encode_msg('PingPongRequest'() | 'ThroughputPingPongRequest'() | 'AtomicRegisterRequest'() | 'SizedThroughputRequest'() | 'FibonacciRequest'() | 'TestResult'() | 'TestSuccess'() | 'TestFailure'() | 'NotImplemented'() | 'ReadyRequest'() | 'ReadyResponse'() | 'ShutdownRequest'() | 'ShutdownAck'(), atom(), list()) -> binary().
+-spec encode_msg('PingPongRequest'() | 'ThroughputPingPongRequest'() | 'AtomicRegisterRequest'() | 'StreamingWindowsRequest'() | 'SizedThroughputRequest'() | 'FibonacciRequest'() | 'ChameneosRequest'() | 'APSPRequest'() | 'AtomicBroadcastRequest'() | 'TestResult'() | 'TestSuccess'() | 'TestFailure'() | 'NotImplemented'() | 'ReadyRequest'() | 'ReadyResponse'() | 'ShutdownRequest'() | 'ShutdownAck'(), atom(), list()) -> binary().
 encode_msg(Msg, MsgName, Opts) ->
     case proplists:get_bool(verify, Opts) of
         true -> verify_msg(Msg, MsgName, Opts);
@@ -128,8 +155,12 @@ encode_msg(Msg, MsgName, Opts) ->
         'PingPongRequest' -> encode_msg_PingPongRequest(id(Msg, TrUserData), TrUserData);
         'ThroughputPingPongRequest' -> encode_msg_ThroughputPingPongRequest(id(Msg, TrUserData), TrUserData);
         'AtomicRegisterRequest' -> encode_msg_AtomicRegisterRequest(id(Msg, TrUserData), TrUserData);
+        'StreamingWindowsRequest' -> encode_msg_StreamingWindowsRequest(id(Msg, TrUserData), TrUserData);
         'SizedThroughputRequest' -> encode_msg_SizedThroughputRequest(id(Msg, TrUserData), TrUserData);
         'FibonacciRequest' -> encode_msg_FibonacciRequest(id(Msg, TrUserData), TrUserData);
+        'ChameneosRequest' -> encode_msg_ChameneosRequest(id(Msg, TrUserData), TrUserData);
+        'APSPRequest' -> encode_msg_APSPRequest(id(Msg, TrUserData), TrUserData);
+        'AtomicBroadcastRequest' -> encode_msg_AtomicBroadcastRequest(id(Msg, TrUserData), TrUserData);
         'TestResult' -> encode_msg_TestResult(id(Msg, TrUserData), TrUserData);
         'TestSuccess' -> encode_msg_TestSuccess(id(Msg, TrUserData), TrUserData);
         'TestFailure' -> encode_msg_TestFailure(id(Msg, TrUserData), TrUserData);
@@ -246,6 +277,62 @@ encode_msg_AtomicRegisterRequest(#{} = M, Bin, TrUserData) ->
         _ -> B3
     end.
 
+encode_msg_StreamingWindowsRequest(Msg, TrUserData) -> encode_msg_StreamingWindowsRequest(Msg, <<>>, TrUserData).
+
+
+encode_msg_StreamingWindowsRequest(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+             #{number_of_partitions := F1} ->
+                 begin
+                     TrF1 = id(F1, TrUserData),
+                     if TrF1 =:= 0 -> Bin;
+                        true -> e_varint(TrF1, <<Bin/binary, 8>>, TrUserData)
+                     end
+                 end;
+             _ -> Bin
+         end,
+    B2 = case M of
+             #{batch_size := F2} ->
+                 begin
+                     TrF2 = id(F2, TrUserData),
+                     if TrF2 =:= 0 -> B1;
+                        true -> e_varint(TrF2, <<B1/binary, 16>>, TrUserData)
+                     end
+                 end;
+             _ -> B1
+         end,
+    B3 = case M of
+             #{window_size := F3} ->
+                 begin
+                     TrF3 = id(F3, TrUserData),
+                     case is_empty_string(TrF3) of
+                         true -> B2;
+                         false -> e_type_string(TrF3, <<B2/binary, 26>>, TrUserData)
+                     end
+                 end;
+             _ -> B2
+         end,
+    B4 = case M of
+             #{number_of_windows := F4} ->
+                 begin
+                     TrF4 = id(F4, TrUserData),
+                     if TrF4 =:= 0 -> B3;
+                        true -> e_varint(TrF4, <<B3/binary, 32>>, TrUserData)
+                     end
+                 end;
+             _ -> B3
+         end,
+    case M of
+        #{window_size_amplification := F5} ->
+            begin
+                TrF5 = id(F5, TrUserData),
+                if TrF5 =:= 0 -> B4;
+                   true -> e_varint(TrF5, <<B4/binary, 40>>, TrUserData)
+                end
+            end;
+        _ -> B4
+    end.
+
 encode_msg_SizedThroughputRequest(Msg, TrUserData) -> encode_msg_SizedThroughputRequest(Msg, <<>>, TrUserData).
 
 
@@ -304,6 +391,124 @@ encode_msg_FibonacciRequest(#{} = M, Bin, TrUserData) ->
                 end
             end;
         _ -> Bin
+    end.
+
+encode_msg_ChameneosRequest(Msg, TrUserData) -> encode_msg_ChameneosRequest(Msg, <<>>, TrUserData).
+
+
+encode_msg_ChameneosRequest(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+             #{number_of_chameneos := F1} ->
+                 begin
+                     TrF1 = id(F1, TrUserData),
+                     if TrF1 =:= 0 -> Bin;
+                        true -> e_varint(TrF1, <<Bin/binary, 8>>, TrUserData)
+                     end
+                 end;
+             _ -> Bin
+         end,
+    case M of
+        #{number_of_meetings := F2} ->
+            begin
+                TrF2 = id(F2, TrUserData),
+                if TrF2 =:= 0 -> B1;
+                   true -> e_varint(TrF2, <<B1/binary, 16>>, TrUserData)
+                end
+            end;
+        _ -> B1
+    end.
+
+encode_msg_APSPRequest(Msg, TrUserData) -> encode_msg_APSPRequest(Msg, <<>>, TrUserData).
+
+
+encode_msg_APSPRequest(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+             #{number_of_nodes := F1} ->
+                 begin
+                     TrF1 = id(F1, TrUserData),
+                     if TrF1 =:= 0 -> Bin;
+                        true -> e_varint(TrF1, <<Bin/binary, 8>>, TrUserData)
+                     end
+                 end;
+             _ -> Bin
+         end,
+    case M of
+        #{block_size := F2} ->
+            begin
+                TrF2 = id(F2, TrUserData),
+                if TrF2 =:= 0 -> B1;
+                   true -> e_varint(TrF2, <<B1/binary, 16>>, TrUserData)
+                end
+            end;
+        _ -> B1
+    end.
+
+encode_msg_AtomicBroadcastRequest(Msg, TrUserData) -> encode_msg_AtomicBroadcastRequest(Msg, <<>>, TrUserData).
+
+
+encode_msg_AtomicBroadcastRequest(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+             #{algorithm := F1} ->
+                 begin
+                     TrF1 = id(F1, TrUserData),
+                     case is_empty_string(TrF1) of
+                         true -> Bin;
+                         false -> e_type_string(TrF1, <<Bin/binary, 10>>, TrUserData)
+                     end
+                 end;
+             _ -> Bin
+         end,
+    B2 = case M of
+             #{number_of_nodes := F2} ->
+                 begin
+                     TrF2 = id(F2, TrUserData),
+                     if TrF2 =:= 0 -> B1;
+                        true -> e_varint(TrF2, <<B1/binary, 16>>, TrUserData)
+                     end
+                 end;
+             _ -> B1
+         end,
+    B3 = case M of
+             #{number_of_proposals := F3} ->
+                 begin
+                     TrF3 = id(F3, TrUserData),
+                     if TrF3 =:= 0 -> B2;
+                        true -> e_varint(TrF3, <<B2/binary, 24>>, TrUserData)
+                     end
+                 end;
+             _ -> B2
+         end,
+    B4 = case M of
+             #{concurrent_proposals := F4} ->
+                 begin
+                     TrF4 = id(F4, TrUserData),
+                     if TrF4 =:= 0 -> B3;
+                        true -> e_varint(TrF4, <<B3/binary, 32>>, TrUserData)
+                     end
+                 end;
+             _ -> B3
+         end,
+    B5 = case M of
+             #{reconfiguration := F5} ->
+                 begin
+                     TrF5 = id(F5, TrUserData),
+                     case is_empty_string(TrF5) of
+                         true -> B4;
+                         false -> e_type_string(TrF5, <<B4/binary, 42>>, TrUserData)
+                     end
+                 end;
+             _ -> B4
+         end,
+    case M of
+        #{reconfig_policy := F6} ->
+            begin
+                TrF6 = id(F6, TrUserData),
+                case is_empty_string(TrF6) of
+                    true -> B5;
+                    false -> e_type_string(TrF6, <<B5/binary, 50>>, TrUserData)
+                end
+            end;
+        _ -> B5
     end.
 
 encode_msg_TestResult(Msg, TrUserData) -> encode_msg_TestResult(Msg, <<>>, TrUserData).
@@ -557,8 +762,12 @@ decode_msg_1_catch(Bin, MsgName, TrUserData) ->
 decode_msg_2_doit('PingPongRequest', Bin, TrUserData) -> id(decode_msg_PingPongRequest(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('ThroughputPingPongRequest', Bin, TrUserData) -> id(decode_msg_ThroughputPingPongRequest(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('AtomicRegisterRequest', Bin, TrUserData) -> id(decode_msg_AtomicRegisterRequest(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('StreamingWindowsRequest', Bin, TrUserData) -> id(decode_msg_StreamingWindowsRequest(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('SizedThroughputRequest', Bin, TrUserData) -> id(decode_msg_SizedThroughputRequest(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('FibonacciRequest', Bin, TrUserData) -> id(decode_msg_FibonacciRequest(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('ChameneosRequest', Bin, TrUserData) -> id(decode_msg_ChameneosRequest(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('APSPRequest', Bin, TrUserData) -> id(decode_msg_APSPRequest(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('AtomicBroadcastRequest', Bin, TrUserData) -> id(decode_msg_AtomicBroadcastRequest(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('TestResult', Bin, TrUserData) -> id(decode_msg_TestResult(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('TestSuccess', Bin, TrUserData) -> id(decode_msg_TestSuccess(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('TestFailure', Bin, TrUserData) -> id(decode_msg_TestFailure(Bin, TrUserData), TrUserData);
@@ -747,6 +956,85 @@ skip_32_AtomicRegisterRequest(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3
 
 skip_64_AtomicRegisterRequest(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_AtomicRegisterRequest(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData).
 
+decode_msg_StreamingWindowsRequest(Bin, TrUserData) -> dfp_read_field_def_StreamingWindowsRequest(Bin, 0, 0, 0, id(0, TrUserData), id(0, TrUserData), id([], TrUserData), id(0, TrUserData), id(0, TrUserData), TrUserData).
+
+dfp_read_field_def_StreamingWindowsRequest(<<8, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) -> d_field_StreamingWindowsRequest_number_of_partitions(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+dfp_read_field_def_StreamingWindowsRequest(<<16, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) -> d_field_StreamingWindowsRequest_batch_size(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+dfp_read_field_def_StreamingWindowsRequest(<<26, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) -> d_field_StreamingWindowsRequest_window_size(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+dfp_read_field_def_StreamingWindowsRequest(<<32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) -> d_field_StreamingWindowsRequest_number_of_windows(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+dfp_read_field_def_StreamingWindowsRequest(<<40, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) -> d_field_StreamingWindowsRequest_window_size_amplification(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+dfp_read_field_def_StreamingWindowsRequest(<<>>, 0, 0, _, F@_1, F@_2, F@_3, F@_4, F@_5, _) -> #{number_of_partitions => F@_1, batch_size => F@_2, window_size => F@_3, number_of_windows => F@_4, window_size_amplification => F@_5};
+dfp_read_field_def_StreamingWindowsRequest(Other, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) -> dg_read_field_def_StreamingWindowsRequest(Other, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData).
+
+dg_read_field_def_StreamingWindowsRequest(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) when N < 32 - 7 ->
+    dg_read_field_def_StreamingWindowsRequest(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+dg_read_field_def_StreamingWindowsRequest(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        8 -> d_field_StreamingWindowsRequest_number_of_partitions(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+        16 -> d_field_StreamingWindowsRequest_batch_size(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+        26 -> d_field_StreamingWindowsRequest_window_size(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+        32 -> d_field_StreamingWindowsRequest_number_of_windows(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+        40 -> d_field_StreamingWindowsRequest_window_size_amplification(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_StreamingWindowsRequest(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+                1 -> skip_64_StreamingWindowsRequest(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+                2 -> skip_length_delimited_StreamingWindowsRequest(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+                3 -> skip_group_StreamingWindowsRequest(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+                5 -> skip_32_StreamingWindowsRequest(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData)
+            end
+    end;
+dg_read_field_def_StreamingWindowsRequest(<<>>, 0, 0, _, F@_1, F@_2, F@_3, F@_4, F@_5, _) -> #{number_of_partitions => F@_1, batch_size => F@_2, window_size => F@_3, number_of_windows => F@_4, window_size_amplification => F@_5}.
+
+d_field_StreamingWindowsRequest_number_of_partitions(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) when N < 57 ->
+    d_field_StreamingWindowsRequest_number_of_partitions(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+d_field_StreamingWindowsRequest_number_of_partitions(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, F@_2, F@_3, F@_4, F@_5, TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc, TrUserData), Rest},
+    dfp_read_field_def_StreamingWindowsRequest(RestF, 0, 0, F, NewFValue, F@_2, F@_3, F@_4, F@_5, TrUserData).
+
+d_field_StreamingWindowsRequest_batch_size(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) when N < 57 ->
+    d_field_StreamingWindowsRequest_batch_size(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+d_field_StreamingWindowsRequest_batch_size(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, _, F@_3, F@_4, F@_5, TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc, TrUserData), Rest},
+    dfp_read_field_def_StreamingWindowsRequest(RestF, 0, 0, F, F@_1, NewFValue, F@_3, F@_4, F@_5, TrUserData).
+
+d_field_StreamingWindowsRequest_window_size(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) when N < 57 ->
+    d_field_StreamingWindowsRequest_window_size(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+d_field_StreamingWindowsRequest_window_size(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, _, F@_4, F@_5, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Utf8:Len/binary, Rest2/binary>> = Rest, {id(unicode:characters_to_list(Utf8, unicode), TrUserData), Rest2} end,
+    dfp_read_field_def_StreamingWindowsRequest(RestF, 0, 0, F, F@_1, F@_2, NewFValue, F@_4, F@_5, TrUserData).
+
+d_field_StreamingWindowsRequest_number_of_windows(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) when N < 57 ->
+    d_field_StreamingWindowsRequest_number_of_windows(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+d_field_StreamingWindowsRequest_number_of_windows(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, _, F@_5, TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc, TrUserData), Rest},
+    dfp_read_field_def_StreamingWindowsRequest(RestF, 0, 0, F, F@_1, F@_2, F@_3, NewFValue, F@_5, TrUserData).
+
+d_field_StreamingWindowsRequest_window_size_amplification(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) when N < 57 ->
+    d_field_StreamingWindowsRequest_window_size_amplification(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+d_field_StreamingWindowsRequest_window_size_amplification(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, _, TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc, TrUserData), Rest},
+    dfp_read_field_def_StreamingWindowsRequest(RestF, 0, 0, F, F@_1, F@_2, F@_3, F@_4, NewFValue, TrUserData).
+
+skip_varint_StreamingWindowsRequest(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) -> skip_varint_StreamingWindowsRequest(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+skip_varint_StreamingWindowsRequest(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) -> dfp_read_field_def_StreamingWindowsRequest(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData).
+
+skip_length_delimited_StreamingWindowsRequest(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) when N < 57 ->
+    skip_length_delimited_StreamingWindowsRequest(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+skip_length_delimited_StreamingWindowsRequest(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_StreamingWindowsRequest(Rest2, 0, 0, F, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData).
+
+skip_group_StreamingWindowsRequest(Bin, _, Z2, FNum, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_StreamingWindowsRequest(Rest, 0, Z2, FNum, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData).
+
+skip_32_StreamingWindowsRequest(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) -> dfp_read_field_def_StreamingWindowsRequest(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData).
+
+skip_64_StreamingWindowsRequest(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) -> dfp_read_field_def_StreamingWindowsRequest(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData).
+
 decode_msg_SizedThroughputRequest(Bin, TrUserData) -> dfp_read_field_def_SizedThroughputRequest(Bin, 0, 0, 0, id(0, TrUserData), id(0, TrUserData), id(0, TrUserData), id(0, TrUserData), TrUserData).
 
 dfp_read_field_def_SizedThroughputRequest(<<8, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_SizedThroughputRequest_message_size(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
@@ -856,6 +1144,197 @@ skip_group_FibonacciRequest(Bin, _, Z2, FNum, F@_1, TrUserData) ->
 skip_32_FibonacciRequest(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_FibonacciRequest(Rest, Z1, Z2, F, F@_1, TrUserData).
 
 skip_64_FibonacciRequest(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_FibonacciRequest(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+decode_msg_ChameneosRequest(Bin, TrUserData) -> dfp_read_field_def_ChameneosRequest(Bin, 0, 0, 0, id(0, TrUserData), id(0, TrUserData), TrUserData).
+
+dfp_read_field_def_ChameneosRequest(<<8, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> d_field_ChameneosRequest_number_of_chameneos(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+dfp_read_field_def_ChameneosRequest(<<16, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> d_field_ChameneosRequest_number_of_meetings(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+dfp_read_field_def_ChameneosRequest(<<>>, 0, 0, _, F@_1, F@_2, _) -> #{number_of_chameneos => F@_1, number_of_meetings => F@_2};
+dfp_read_field_def_ChameneosRequest(Other, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dg_read_field_def_ChameneosRequest(Other, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+dg_read_field_def_ChameneosRequest(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 32 - 7 -> dg_read_field_def_ChameneosRequest(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+dg_read_field_def_ChameneosRequest(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        8 -> d_field_ChameneosRequest_number_of_chameneos(Rest, 0, 0, 0, F@_1, F@_2, TrUserData);
+        16 -> d_field_ChameneosRequest_number_of_meetings(Rest, 0, 0, 0, F@_1, F@_2, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_ChameneosRequest(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                1 -> skip_64_ChameneosRequest(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                2 -> skip_length_delimited_ChameneosRequest(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                3 -> skip_group_ChameneosRequest(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                5 -> skip_32_ChameneosRequest(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData)
+            end
+    end;
+dg_read_field_def_ChameneosRequest(<<>>, 0, 0, _, F@_1, F@_2, _) -> #{number_of_chameneos => F@_1, number_of_meetings => F@_2}.
+
+d_field_ChameneosRequest_number_of_chameneos(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> d_field_ChameneosRequest_number_of_chameneos(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+d_field_ChameneosRequest_number_of_chameneos(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, F@_2, TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc, TrUserData), Rest},
+    dfp_read_field_def_ChameneosRequest(RestF, 0, 0, F, NewFValue, F@_2, TrUserData).
+
+d_field_ChameneosRequest_number_of_meetings(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> d_field_ChameneosRequest_number_of_meetings(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+d_field_ChameneosRequest_number_of_meetings(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, _, TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc, TrUserData), Rest},
+    dfp_read_field_def_ChameneosRequest(RestF, 0, 0, F, F@_1, NewFValue, TrUserData).
+
+skip_varint_ChameneosRequest(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> skip_varint_ChameneosRequest(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+skip_varint_ChameneosRequest(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_ChameneosRequest(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+skip_length_delimited_ChameneosRequest(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> skip_length_delimited_ChameneosRequest(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+skip_length_delimited_ChameneosRequest(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_ChameneosRequest(Rest2, 0, 0, F, F@_1, F@_2, TrUserData).
+
+skip_group_ChameneosRequest(Bin, _, Z2, FNum, F@_1, F@_2, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_ChameneosRequest(Rest, 0, Z2, FNum, F@_1, F@_2, TrUserData).
+
+skip_32_ChameneosRequest(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_ChameneosRequest(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+skip_64_ChameneosRequest(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_ChameneosRequest(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+decode_msg_APSPRequest(Bin, TrUserData) -> dfp_read_field_def_APSPRequest(Bin, 0, 0, 0, id(0, TrUserData), id(0, TrUserData), TrUserData).
+
+dfp_read_field_def_APSPRequest(<<8, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> d_field_APSPRequest_number_of_nodes(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+dfp_read_field_def_APSPRequest(<<16, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> d_field_APSPRequest_block_size(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+dfp_read_field_def_APSPRequest(<<>>, 0, 0, _, F@_1, F@_2, _) -> #{number_of_nodes => F@_1, block_size => F@_2};
+dfp_read_field_def_APSPRequest(Other, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dg_read_field_def_APSPRequest(Other, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+dg_read_field_def_APSPRequest(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 32 - 7 -> dg_read_field_def_APSPRequest(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+dg_read_field_def_APSPRequest(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        8 -> d_field_APSPRequest_number_of_nodes(Rest, 0, 0, 0, F@_1, F@_2, TrUserData);
+        16 -> d_field_APSPRequest_block_size(Rest, 0, 0, 0, F@_1, F@_2, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_APSPRequest(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                1 -> skip_64_APSPRequest(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                2 -> skip_length_delimited_APSPRequest(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                3 -> skip_group_APSPRequest(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                5 -> skip_32_APSPRequest(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData)
+            end
+    end;
+dg_read_field_def_APSPRequest(<<>>, 0, 0, _, F@_1, F@_2, _) -> #{number_of_nodes => F@_1, block_size => F@_2}.
+
+d_field_APSPRequest_number_of_nodes(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> d_field_APSPRequest_number_of_nodes(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+d_field_APSPRequest_number_of_nodes(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, F@_2, TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc, TrUserData), Rest},
+    dfp_read_field_def_APSPRequest(RestF, 0, 0, F, NewFValue, F@_2, TrUserData).
+
+d_field_APSPRequest_block_size(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> d_field_APSPRequest_block_size(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+d_field_APSPRequest_block_size(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, _, TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc, TrUserData), Rest},
+    dfp_read_field_def_APSPRequest(RestF, 0, 0, F, F@_1, NewFValue, TrUserData).
+
+skip_varint_APSPRequest(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> skip_varint_APSPRequest(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+skip_varint_APSPRequest(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_APSPRequest(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+skip_length_delimited_APSPRequest(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> skip_length_delimited_APSPRequest(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+skip_length_delimited_APSPRequest(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_APSPRequest(Rest2, 0, 0, F, F@_1, F@_2, TrUserData).
+
+skip_group_APSPRequest(Bin, _, Z2, FNum, F@_1, F@_2, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_APSPRequest(Rest, 0, Z2, FNum, F@_1, F@_2, TrUserData).
+
+skip_32_APSPRequest(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_APSPRequest(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+skip_64_APSPRequest(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_APSPRequest(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+decode_msg_AtomicBroadcastRequest(Bin, TrUserData) -> dfp_read_field_def_AtomicBroadcastRequest(Bin, 0, 0, 0, id([], TrUserData), id(0, TrUserData), id(0, TrUserData), id(0, TrUserData), id([], TrUserData), id([], TrUserData), TrUserData).
+
+dfp_read_field_def_AtomicBroadcastRequest(<<10, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> d_field_AtomicBroadcastRequest_algorithm(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+dfp_read_field_def_AtomicBroadcastRequest(<<16, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> d_field_AtomicBroadcastRequest_number_of_nodes(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+dfp_read_field_def_AtomicBroadcastRequest(<<24, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> d_field_AtomicBroadcastRequest_number_of_proposals(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+dfp_read_field_def_AtomicBroadcastRequest(<<32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> d_field_AtomicBroadcastRequest_concurrent_proposals(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+dfp_read_field_def_AtomicBroadcastRequest(<<42, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> d_field_AtomicBroadcastRequest_reconfiguration(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+dfp_read_field_def_AtomicBroadcastRequest(<<50, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> d_field_AtomicBroadcastRequest_reconfig_policy(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+dfp_read_field_def_AtomicBroadcastRequest(<<>>, 0, 0, _, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, _) ->
+    #{algorithm => F@_1, number_of_nodes => F@_2, number_of_proposals => F@_3, concurrent_proposals => F@_4, reconfiguration => F@_5, reconfig_policy => F@_6};
+dfp_read_field_def_AtomicBroadcastRequest(Other, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> dg_read_field_def_AtomicBroadcastRequest(Other, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData).
+
+dg_read_field_def_AtomicBroadcastRequest(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) when N < 32 - 7 ->
+    dg_read_field_def_AtomicBroadcastRequest(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+dg_read_field_def_AtomicBroadcastRequest(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_AtomicBroadcastRequest_algorithm(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+        16 -> d_field_AtomicBroadcastRequest_number_of_nodes(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+        24 -> d_field_AtomicBroadcastRequest_number_of_proposals(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+        32 -> d_field_AtomicBroadcastRequest_concurrent_proposals(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+        42 -> d_field_AtomicBroadcastRequest_reconfiguration(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+        50 -> d_field_AtomicBroadcastRequest_reconfig_policy(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_AtomicBroadcastRequest(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+                1 -> skip_64_AtomicBroadcastRequest(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+                2 -> skip_length_delimited_AtomicBroadcastRequest(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+                3 -> skip_group_AtomicBroadcastRequest(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+                5 -> skip_32_AtomicBroadcastRequest(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData)
+            end
+    end;
+dg_read_field_def_AtomicBroadcastRequest(<<>>, 0, 0, _, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, _) ->
+    #{algorithm => F@_1, number_of_nodes => F@_2, number_of_proposals => F@_3, concurrent_proposals => F@_4, reconfiguration => F@_5, reconfig_policy => F@_6}.
+
+d_field_AtomicBroadcastRequest_algorithm(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) when N < 57 ->
+    d_field_AtomicBroadcastRequest_algorithm(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+d_field_AtomicBroadcastRequest_algorithm(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Utf8:Len/binary, Rest2/binary>> = Rest, {id(unicode:characters_to_list(Utf8, unicode), TrUserData), Rest2} end,
+    dfp_read_field_def_AtomicBroadcastRequest(RestF, 0, 0, F, NewFValue, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData).
+
+d_field_AtomicBroadcastRequest_number_of_nodes(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) when N < 57 ->
+    d_field_AtomicBroadcastRequest_number_of_nodes(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+d_field_AtomicBroadcastRequest_number_of_nodes(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, _, F@_3, F@_4, F@_5, F@_6, TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc, TrUserData), Rest},
+    dfp_read_field_def_AtomicBroadcastRequest(RestF, 0, 0, F, F@_1, NewFValue, F@_3, F@_4, F@_5, F@_6, TrUserData).
+
+d_field_AtomicBroadcastRequest_number_of_proposals(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) when N < 57 ->
+    d_field_AtomicBroadcastRequest_number_of_proposals(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+d_field_AtomicBroadcastRequest_number_of_proposals(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, _, F@_4, F@_5, F@_6, TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc, TrUserData), Rest},
+    dfp_read_field_def_AtomicBroadcastRequest(RestF, 0, 0, F, F@_1, F@_2, NewFValue, F@_4, F@_5, F@_6, TrUserData).
+
+d_field_AtomicBroadcastRequest_concurrent_proposals(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) when N < 57 ->
+    d_field_AtomicBroadcastRequest_concurrent_proposals(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+d_field_AtomicBroadcastRequest_concurrent_proposals(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, _, F@_5, F@_6, TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc, TrUserData), Rest},
+    dfp_read_field_def_AtomicBroadcastRequest(RestF, 0, 0, F, F@_1, F@_2, F@_3, NewFValue, F@_5, F@_6, TrUserData).
+
+d_field_AtomicBroadcastRequest_reconfiguration(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) when N < 57 ->
+    d_field_AtomicBroadcastRequest_reconfiguration(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+d_field_AtomicBroadcastRequest_reconfiguration(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, _, F@_6, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Utf8:Len/binary, Rest2/binary>> = Rest, {id(unicode:characters_to_list(Utf8, unicode), TrUserData), Rest2} end,
+    dfp_read_field_def_AtomicBroadcastRequest(RestF, 0, 0, F, F@_1, F@_2, F@_3, F@_4, NewFValue, F@_6, TrUserData).
+
+d_field_AtomicBroadcastRequest_reconfig_policy(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) when N < 57 ->
+    d_field_AtomicBroadcastRequest_reconfig_policy(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+d_field_AtomicBroadcastRequest_reconfig_policy(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, _, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Utf8:Len/binary, Rest2/binary>> = Rest, {id(unicode:characters_to_list(Utf8, unicode), TrUserData), Rest2} end,
+    dfp_read_field_def_AtomicBroadcastRequest(RestF, 0, 0, F, F@_1, F@_2, F@_3, F@_4, F@_5, NewFValue, TrUserData).
+
+skip_varint_AtomicBroadcastRequest(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> skip_varint_AtomicBroadcastRequest(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+skip_varint_AtomicBroadcastRequest(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> dfp_read_field_def_AtomicBroadcastRequest(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData).
+
+skip_length_delimited_AtomicBroadcastRequest(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) when N < 57 ->
+    skip_length_delimited_AtomicBroadcastRequest(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+skip_length_delimited_AtomicBroadcastRequest(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_AtomicBroadcastRequest(Rest2, 0, 0, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData).
+
+skip_group_AtomicBroadcastRequest(Bin, _, Z2, FNum, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_AtomicBroadcastRequest(Rest, 0, Z2, FNum, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData).
+
+skip_32_AtomicBroadcastRequest(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> dfp_read_field_def_AtomicBroadcastRequest(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData).
+
+skip_64_AtomicBroadcastRequest(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> dfp_read_field_def_AtomicBroadcastRequest(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData).
 
 decode_msg_TestResult(Bin, TrUserData) -> dfp_read_field_def_TestResult(Bin, 0, 0, 0, id('$undef', TrUserData), TrUserData).
 
@@ -1316,8 +1795,12 @@ merge_msgs(Prev, New, MsgName, Opts) ->
         'PingPongRequest' -> merge_msg_PingPongRequest(Prev, New, TrUserData);
         'ThroughputPingPongRequest' -> merge_msg_ThroughputPingPongRequest(Prev, New, TrUserData);
         'AtomicRegisterRequest' -> merge_msg_AtomicRegisterRequest(Prev, New, TrUserData);
+        'StreamingWindowsRequest' -> merge_msg_StreamingWindowsRequest(Prev, New, TrUserData);
         'SizedThroughputRequest' -> merge_msg_SizedThroughputRequest(Prev, New, TrUserData);
         'FibonacciRequest' -> merge_msg_FibonacciRequest(Prev, New, TrUserData);
+        'ChameneosRequest' -> merge_msg_ChameneosRequest(Prev, New, TrUserData);
+        'APSPRequest' -> merge_msg_APSPRequest(Prev, New, TrUserData);
+        'AtomicBroadcastRequest' -> merge_msg_AtomicBroadcastRequest(Prev, New, TrUserData);
         'TestResult' -> merge_msg_TestResult(Prev, New, TrUserData);
         'TestSuccess' -> merge_msg_TestSuccess(Prev, New, TrUserData);
         'TestFailure' -> merge_msg_TestFailure(Prev, New, TrUserData);
@@ -1385,6 +1868,35 @@ merge_msg_AtomicRegisterRequest(PMsg, NMsg, _) ->
         _ -> S4
     end.
 
+-compile({nowarn_unused_function,merge_msg_StreamingWindowsRequest/3}).
+merge_msg_StreamingWindowsRequest(PMsg, NMsg, _) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+             {_, #{number_of_partitions := NFnumber_of_partitions}} -> S1#{number_of_partitions => NFnumber_of_partitions};
+             {#{number_of_partitions := PFnumber_of_partitions}, _} -> S1#{number_of_partitions => PFnumber_of_partitions};
+             _ -> S1
+         end,
+    S3 = case {PMsg, NMsg} of
+             {_, #{batch_size := NFbatch_size}} -> S2#{batch_size => NFbatch_size};
+             {#{batch_size := PFbatch_size}, _} -> S2#{batch_size => PFbatch_size};
+             _ -> S2
+         end,
+    S4 = case {PMsg, NMsg} of
+             {_, #{window_size := NFwindow_size}} -> S3#{window_size => NFwindow_size};
+             {#{window_size := PFwindow_size}, _} -> S3#{window_size => PFwindow_size};
+             _ -> S3
+         end,
+    S5 = case {PMsg, NMsg} of
+             {_, #{number_of_windows := NFnumber_of_windows}} -> S4#{number_of_windows => NFnumber_of_windows};
+             {#{number_of_windows := PFnumber_of_windows}, _} -> S4#{number_of_windows => PFnumber_of_windows};
+             _ -> S4
+         end,
+    case {PMsg, NMsg} of
+        {_, #{window_size_amplification := NFwindow_size_amplification}} -> S5#{window_size_amplification => NFwindow_size_amplification};
+        {#{window_size_amplification := PFwindow_size_amplification}, _} -> S5#{window_size_amplification => PFwindow_size_amplification};
+        _ -> S5
+    end.
+
 -compile({nowarn_unused_function,merge_msg_SizedThroughputRequest/3}).
 merge_msg_SizedThroughputRequest(PMsg, NMsg, _) ->
     S1 = #{},
@@ -1416,6 +1928,68 @@ merge_msg_FibonacciRequest(PMsg, NMsg, _) ->
         {_, #{fib_number := NFfib_number}} -> S1#{fib_number => NFfib_number};
         {#{fib_number := PFfib_number}, _} -> S1#{fib_number => PFfib_number};
         _ -> S1
+    end.
+
+-compile({nowarn_unused_function,merge_msg_ChameneosRequest/3}).
+merge_msg_ChameneosRequest(PMsg, NMsg, _) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+             {_, #{number_of_chameneos := NFnumber_of_chameneos}} -> S1#{number_of_chameneos => NFnumber_of_chameneos};
+             {#{number_of_chameneos := PFnumber_of_chameneos}, _} -> S1#{number_of_chameneos => PFnumber_of_chameneos};
+             _ -> S1
+         end,
+    case {PMsg, NMsg} of
+        {_, #{number_of_meetings := NFnumber_of_meetings}} -> S2#{number_of_meetings => NFnumber_of_meetings};
+        {#{number_of_meetings := PFnumber_of_meetings}, _} -> S2#{number_of_meetings => PFnumber_of_meetings};
+        _ -> S2
+    end.
+
+-compile({nowarn_unused_function,merge_msg_APSPRequest/3}).
+merge_msg_APSPRequest(PMsg, NMsg, _) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+             {_, #{number_of_nodes := NFnumber_of_nodes}} -> S1#{number_of_nodes => NFnumber_of_nodes};
+             {#{number_of_nodes := PFnumber_of_nodes}, _} -> S1#{number_of_nodes => PFnumber_of_nodes};
+             _ -> S1
+         end,
+    case {PMsg, NMsg} of
+        {_, #{block_size := NFblock_size}} -> S2#{block_size => NFblock_size};
+        {#{block_size := PFblock_size}, _} -> S2#{block_size => PFblock_size};
+        _ -> S2
+    end.
+
+-compile({nowarn_unused_function,merge_msg_AtomicBroadcastRequest/3}).
+merge_msg_AtomicBroadcastRequest(PMsg, NMsg, _) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+             {_, #{algorithm := NFalgorithm}} -> S1#{algorithm => NFalgorithm};
+             {#{algorithm := PFalgorithm}, _} -> S1#{algorithm => PFalgorithm};
+             _ -> S1
+         end,
+    S3 = case {PMsg, NMsg} of
+             {_, #{number_of_nodes := NFnumber_of_nodes}} -> S2#{number_of_nodes => NFnumber_of_nodes};
+             {#{number_of_nodes := PFnumber_of_nodes}, _} -> S2#{number_of_nodes => PFnumber_of_nodes};
+             _ -> S2
+         end,
+    S4 = case {PMsg, NMsg} of
+             {_, #{number_of_proposals := NFnumber_of_proposals}} -> S3#{number_of_proposals => NFnumber_of_proposals};
+             {#{number_of_proposals := PFnumber_of_proposals}, _} -> S3#{number_of_proposals => PFnumber_of_proposals};
+             _ -> S3
+         end,
+    S5 = case {PMsg, NMsg} of
+             {_, #{concurrent_proposals := NFconcurrent_proposals}} -> S4#{concurrent_proposals => NFconcurrent_proposals};
+             {#{concurrent_proposals := PFconcurrent_proposals}, _} -> S4#{concurrent_proposals => PFconcurrent_proposals};
+             _ -> S4
+         end,
+    S6 = case {PMsg, NMsg} of
+             {_, #{reconfiguration := NFreconfiguration}} -> S5#{reconfiguration => NFreconfiguration};
+             {#{reconfiguration := PFreconfiguration}, _} -> S5#{reconfiguration => PFreconfiguration};
+             _ -> S5
+         end,
+    case {PMsg, NMsg} of
+        {_, #{reconfig_policy := NFreconfig_policy}} -> S6#{reconfig_policy => NFreconfig_policy};
+        {#{reconfig_policy := PFreconfig_policy}, _} -> S6#{reconfig_policy => PFreconfig_policy};
+        _ -> S6
     end.
 
 -compile({nowarn_unused_function,merge_msg_TestResult/3}).
@@ -1490,8 +2064,12 @@ verify_msg(Msg, MsgName, Opts) ->
         'PingPongRequest' -> v_msg_PingPongRequest(Msg, [MsgName], TrUserData);
         'ThroughputPingPongRequest' -> v_msg_ThroughputPingPongRequest(Msg, [MsgName], TrUserData);
         'AtomicRegisterRequest' -> v_msg_AtomicRegisterRequest(Msg, [MsgName], TrUserData);
+        'StreamingWindowsRequest' -> v_msg_StreamingWindowsRequest(Msg, [MsgName], TrUserData);
         'SizedThroughputRequest' -> v_msg_SizedThroughputRequest(Msg, [MsgName], TrUserData);
         'FibonacciRequest' -> v_msg_FibonacciRequest(Msg, [MsgName], TrUserData);
+        'ChameneosRequest' -> v_msg_ChameneosRequest(Msg, [MsgName], TrUserData);
+        'APSPRequest' -> v_msg_APSPRequest(Msg, [MsgName], TrUserData);
+        'AtomicBroadcastRequest' -> v_msg_AtomicBroadcastRequest(Msg, [MsgName], TrUserData);
         'TestResult' -> v_msg_TestResult(Msg, [MsgName], TrUserData);
         'TestSuccess' -> v_msg_TestSuccess(Msg, [MsgName], TrUserData);
         'TestFailure' -> v_msg_TestFailure(Msg, [MsgName], TrUserData);
@@ -1579,6 +2157,41 @@ v_msg_AtomicRegisterRequest(#{} = M, Path, TrUserData) ->
 v_msg_AtomicRegisterRequest(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'AtomicRegisterRequest'}, M, Path);
 v_msg_AtomicRegisterRequest(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'AtomicRegisterRequest'}, X, Path).
 
+-compile({nowarn_unused_function,v_msg_StreamingWindowsRequest/3}).
+-dialyzer({nowarn_function,v_msg_StreamingWindowsRequest/3}).
+v_msg_StreamingWindowsRequest(#{} = M, Path, TrUserData) ->
+    case M of
+        #{number_of_partitions := F1} -> v_type_uint32(F1, [number_of_partitions | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{batch_size := F2} -> v_type_uint64(F2, [batch_size | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{window_size := F3} -> v_type_string(F3, [window_size | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{number_of_windows := F4} -> v_type_uint64(F4, [number_of_windows | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{window_size_amplification := F5} -> v_type_uint64(F5, [window_size_amplification | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (number_of_partitions) -> ok;
+                      (batch_size) -> ok;
+                      (window_size) -> ok;
+                      (number_of_windows) -> ok;
+                      (window_size_amplification) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_StreamingWindowsRequest(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'StreamingWindowsRequest'}, M, Path);
+v_msg_StreamingWindowsRequest(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'StreamingWindowsRequest'}, X, Path).
+
 -compile({nowarn_unused_function,v_msg_SizedThroughputRequest/3}).
 -dialyzer({nowarn_function,v_msg_SizedThroughputRequest/3}).
 v_msg_SizedThroughputRequest(#{} = M, Path, TrUserData) ->
@@ -1623,6 +2236,86 @@ v_msg_FibonacciRequest(#{} = M, Path, TrUserData) ->
     ok;
 v_msg_FibonacciRequest(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'FibonacciRequest'}, M, Path);
 v_msg_FibonacciRequest(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'FibonacciRequest'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_ChameneosRequest/3}).
+-dialyzer({nowarn_function,v_msg_ChameneosRequest/3}).
+v_msg_ChameneosRequest(#{} = M, Path, TrUserData) ->
+    case M of
+        #{number_of_chameneos := F1} -> v_type_uint32(F1, [number_of_chameneos | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{number_of_meetings := F2} -> v_type_uint64(F2, [number_of_meetings | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (number_of_chameneos) -> ok;
+                      (number_of_meetings) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_ChameneosRequest(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'ChameneosRequest'}, M, Path);
+v_msg_ChameneosRequest(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'ChameneosRequest'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_APSPRequest/3}).
+-dialyzer({nowarn_function,v_msg_APSPRequest/3}).
+v_msg_APSPRequest(#{} = M, Path, TrUserData) ->
+    case M of
+        #{number_of_nodes := F1} -> v_type_uint32(F1, [number_of_nodes | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{block_size := F2} -> v_type_uint32(F2, [block_size | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (number_of_nodes) -> ok;
+                      (block_size) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_APSPRequest(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'APSPRequest'}, M, Path);
+v_msg_APSPRequest(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'APSPRequest'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_AtomicBroadcastRequest/3}).
+-dialyzer({nowarn_function,v_msg_AtomicBroadcastRequest/3}).
+v_msg_AtomicBroadcastRequest(#{} = M, Path, TrUserData) ->
+    case M of
+        #{algorithm := F1} -> v_type_string(F1, [algorithm | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{number_of_nodes := F2} -> v_type_uint64(F2, [number_of_nodes | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{number_of_proposals := F3} -> v_type_uint64(F3, [number_of_proposals | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{concurrent_proposals := F4} -> v_type_uint64(F4, [concurrent_proposals | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{reconfiguration := F5} -> v_type_string(F5, [reconfiguration | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{reconfig_policy := F6} -> v_type_string(F6, [reconfig_policy | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (algorithm) -> ok;
+                      (number_of_nodes) -> ok;
+                      (number_of_proposals) -> ok;
+                      (concurrent_proposals) -> ok;
+                      (reconfiguration) -> ok;
+                      (reconfig_policy) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_AtomicBroadcastRequest(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'AtomicBroadcastRequest'}, M, Path);
+v_msg_AtomicBroadcastRequest(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'AtomicBroadcastRequest'}, X, Path).
 
 -compile({nowarn_unused_function,v_msg_TestResult/3}).
 -dialyzer({nowarn_function,v_msg_TestResult/3}).
@@ -1834,12 +2527,27 @@ get_msg_defs() ->
        #{name => write_workload, fnum => 2, rnum => 3, type => float, occurrence => optional, opts => []},
        #{name => partition_size, fnum => 3, rnum => 4, type => uint32, occurrence => optional, opts => []},
        #{name => number_of_keys, fnum => 4, rnum => 5, type => uint64, occurrence => optional, opts => []}]},
+     {{msg, 'StreamingWindowsRequest'},
+      [#{name => number_of_partitions, fnum => 1, rnum => 2, type => uint32, occurrence => optional, opts => []},
+       #{name => batch_size, fnum => 2, rnum => 3, type => uint64, occurrence => optional, opts => []},
+       #{name => window_size, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []},
+       #{name => number_of_windows, fnum => 4, rnum => 5, type => uint64, occurrence => optional, opts => []},
+       #{name => window_size_amplification, fnum => 5, rnum => 6, type => uint64, occurrence => optional, opts => []}]},
      {{msg, 'SizedThroughputRequest'},
       [#{name => message_size, fnum => 1, rnum => 2, type => uint32, occurrence => optional, opts => []},
        #{name => batch_size, fnum => 2, rnum => 3, type => uint32, occurrence => optional, opts => []},
        #{name => number_of_batches, fnum => 3, rnum => 4, type => uint32, occurrence => optional, opts => []},
        #{name => number_of_pairs, fnum => 4, rnum => 5, type => uint32, occurrence => optional, opts => []}]},
      {{msg, 'FibonacciRequest'}, [#{name => fib_number, fnum => 1, rnum => 2, type => uint32, occurrence => optional, opts => []}]},
+     {{msg, 'ChameneosRequest'}, [#{name => number_of_chameneos, fnum => 1, rnum => 2, type => uint32, occurrence => optional, opts => []}, #{name => number_of_meetings, fnum => 2, rnum => 3, type => uint64, occurrence => optional, opts => []}]},
+     {{msg, 'APSPRequest'}, [#{name => number_of_nodes, fnum => 1, rnum => 2, type => uint32, occurrence => optional, opts => []}, #{name => block_size, fnum => 2, rnum => 3, type => uint32, occurrence => optional, opts => []}]},
+     {{msg, 'AtomicBroadcastRequest'},
+      [#{name => algorithm, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
+       #{name => number_of_nodes, fnum => 2, rnum => 3, type => uint64, occurrence => optional, opts => []},
+       #{name => number_of_proposals, fnum => 3, rnum => 4, type => uint64, occurrence => optional, opts => []},
+       #{name => concurrent_proposals, fnum => 4, rnum => 5, type => uint64, occurrence => optional, opts => []},
+       #{name => reconfiguration, fnum => 5, rnum => 6, type => string, occurrence => optional, opts => []},
+       #{name => reconfig_policy, fnum => 6, rnum => 7, type => string, occurrence => optional, opts => []}]},
      {{msg, 'TestResult'},
       [#{name => sealed_value, rnum => 2,
          fields =>
@@ -1856,14 +2564,46 @@ get_msg_defs() ->
 
 
 get_msg_names() ->
-    ['PingPongRequest', 'ThroughputPingPongRequest', 'AtomicRegisterRequest', 'SizedThroughputRequest', 'FibonacciRequest', 'TestResult', 'TestSuccess', 'TestFailure', 'NotImplemented', 'ReadyRequest', 'ReadyResponse', 'ShutdownRequest', 'ShutdownAck'].
+    ['PingPongRequest',
+     'ThroughputPingPongRequest',
+     'AtomicRegisterRequest',
+     'StreamingWindowsRequest',
+     'SizedThroughputRequest',
+     'FibonacciRequest',
+     'ChameneosRequest',
+     'APSPRequest',
+     'AtomicBroadcastRequest',
+     'TestResult',
+     'TestSuccess',
+     'TestFailure',
+     'NotImplemented',
+     'ReadyRequest',
+     'ReadyResponse',
+     'ShutdownRequest',
+     'ShutdownAck'].
 
 
 get_group_names() -> [].
 
 
 get_msg_or_group_names() ->
-    ['PingPongRequest', 'ThroughputPingPongRequest', 'AtomicRegisterRequest', 'SizedThroughputRequest', 'FibonacciRequest', 'TestResult', 'TestSuccess', 'TestFailure', 'NotImplemented', 'ReadyRequest', 'ReadyResponse', 'ShutdownRequest', 'ShutdownAck'].
+    ['PingPongRequest',
+     'ThroughputPingPongRequest',
+     'AtomicRegisterRequest',
+     'StreamingWindowsRequest',
+     'SizedThroughputRequest',
+     'FibonacciRequest',
+     'ChameneosRequest',
+     'APSPRequest',
+     'AtomicBroadcastRequest',
+     'TestResult',
+     'TestSuccess',
+     'TestFailure',
+     'NotImplemented',
+     'ReadyRequest',
+     'ReadyResponse',
+     'ShutdownRequest',
+     'ShutdownAck'].
 
 
 get_enum_names() -> [].
@@ -1891,12 +2631,27 @@ find_msg_def('AtomicRegisterRequest') ->
      #{name => write_workload, fnum => 2, rnum => 3, type => float, occurrence => optional, opts => []},
      #{name => partition_size, fnum => 3, rnum => 4, type => uint32, occurrence => optional, opts => []},
      #{name => number_of_keys, fnum => 4, rnum => 5, type => uint64, occurrence => optional, opts => []}];
+find_msg_def('StreamingWindowsRequest') ->
+    [#{name => number_of_partitions, fnum => 1, rnum => 2, type => uint32, occurrence => optional, opts => []},
+     #{name => batch_size, fnum => 2, rnum => 3, type => uint64, occurrence => optional, opts => []},
+     #{name => window_size, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []},
+     #{name => number_of_windows, fnum => 4, rnum => 5, type => uint64, occurrence => optional, opts => []},
+     #{name => window_size_amplification, fnum => 5, rnum => 6, type => uint64, occurrence => optional, opts => []}];
 find_msg_def('SizedThroughputRequest') ->
     [#{name => message_size, fnum => 1, rnum => 2, type => uint32, occurrence => optional, opts => []},
      #{name => batch_size, fnum => 2, rnum => 3, type => uint32, occurrence => optional, opts => []},
      #{name => number_of_batches, fnum => 3, rnum => 4, type => uint32, occurrence => optional, opts => []},
      #{name => number_of_pairs, fnum => 4, rnum => 5, type => uint32, occurrence => optional, opts => []}];
 find_msg_def('FibonacciRequest') -> [#{name => fib_number, fnum => 1, rnum => 2, type => uint32, occurrence => optional, opts => []}];
+find_msg_def('ChameneosRequest') -> [#{name => number_of_chameneos, fnum => 1, rnum => 2, type => uint32, occurrence => optional, opts => []}, #{name => number_of_meetings, fnum => 2, rnum => 3, type => uint64, occurrence => optional, opts => []}];
+find_msg_def('APSPRequest') -> [#{name => number_of_nodes, fnum => 1, rnum => 2, type => uint32, occurrence => optional, opts => []}, #{name => block_size, fnum => 2, rnum => 3, type => uint32, occurrence => optional, opts => []}];
+find_msg_def('AtomicBroadcastRequest') ->
+    [#{name => algorithm, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
+     #{name => number_of_nodes, fnum => 2, rnum => 3, type => uint64, occurrence => optional, opts => []},
+     #{name => number_of_proposals, fnum => 3, rnum => 4, type => uint64, occurrence => optional, opts => []},
+     #{name => concurrent_proposals, fnum => 4, rnum => 5, type => uint64, occurrence => optional, opts => []},
+     #{name => reconfiguration, fnum => 5, rnum => 6, type => string, occurrence => optional, opts => []},
+     #{name => reconfig_policy, fnum => 6, rnum => 7, type => string, occurrence => optional, opts => []}];
 find_msg_def('TestResult') ->
     [#{name => sealed_value, rnum => 2,
        fields =>
@@ -1935,14 +2690,19 @@ get_service_def('BenchmarkRunner') ->
       #{name => 'PingPong', input => 'PingPongRequest', output => 'TestResult', input_stream => false, output_stream => false, opts => []},
       #{name => 'NetPingPong', input => 'PingPongRequest', output => 'TestResult', input_stream => false, output_stream => false, opts => []},
       #{name => 'ThroughputPingPong', input => 'ThroughputPingPongRequest', output => 'TestResult', input_stream => false, output_stream => false, opts => []},
-      #{name => 'Fibonacci', input => 'FibonacciRequest', output => 'TestResult', input_stream => false, output_stream => false, opts => []},
       #{name => 'NetThroughputPingPong', input => 'ThroughputPingPongRequest', output => 'TestResult', input_stream => false, output_stream => false, opts => []},
       #{name => 'AtomicRegister', input => 'AtomicRegisterRequest', output => 'TestResult', input_stream => false, output_stream => false, opts => []},
+      #{name => 'StreamingWindows', input => 'StreamingWindowsRequest', output => 'TestResult', input_stream => false, output_stream => false, opts => []},
+      #{name => 'Fibonacci', input => 'FibonacciRequest', output => 'TestResult', input_stream => false, output_stream => false, opts => []},
+      #{name => 'Chameneos', input => 'ChameneosRequest', output => 'TestResult', input_stream => false, output_stream => false, opts => []},
+      #{name => 'AllPairsShortestPath', input => 'APSPRequest', output => 'TestResult', input_stream => false, output_stream => false, opts => []},
+      #{name => 'AtomicBroadcast', input => 'AtomicBroadcastRequest', output => 'TestResult', input_stream => false, output_stream => false, opts => []},
       #{name => 'SizedThroughput', input => 'SizedThroughputRequest', output => 'TestResult', input_stream => false, output_stream => false, opts => []}]};
 get_service_def(_) -> error.
 
 
-get_rpc_names('BenchmarkRunner') -> ['Ready', 'Shutdown', 'PingPong', 'NetPingPong', 'ThroughputPingPong', 'Fibonacci', 'NetThroughputPingPong', 'AtomicRegister', 'SizedThroughput'];
+get_rpc_names('BenchmarkRunner') ->
+    ['Ready', 'Shutdown', 'PingPong', 'NetPingPong', 'ThroughputPingPong', 'NetThroughputPingPong', 'AtomicRegister', 'StreamingWindows', 'Fibonacci', 'Chameneos', 'AllPairsShortestPath', 'AtomicBroadcast', 'SizedThroughput'];
 get_rpc_names(_) -> error.
 
 
@@ -1955,9 +2715,13 @@ find_rpc_def_BenchmarkRunner('Shutdown') -> #{name => 'Shutdown', input => 'Shut
 find_rpc_def_BenchmarkRunner('PingPong') -> #{name => 'PingPong', input => 'PingPongRequest', output => 'TestResult', input_stream => false, output_stream => false, opts => []};
 find_rpc_def_BenchmarkRunner('NetPingPong') -> #{name => 'NetPingPong', input => 'PingPongRequest', output => 'TestResult', input_stream => false, output_stream => false, opts => []};
 find_rpc_def_BenchmarkRunner('ThroughputPingPong') -> #{name => 'ThroughputPingPong', input => 'ThroughputPingPongRequest', output => 'TestResult', input_stream => false, output_stream => false, opts => []};
-find_rpc_def_BenchmarkRunner('Fibonacci') -> #{name => 'Fibonacci', input => 'FibonacciRequest', output => 'TestResult', input_stream => false, output_stream => false, opts => []};
 find_rpc_def_BenchmarkRunner('NetThroughputPingPong') -> #{name => 'NetThroughputPingPong', input => 'ThroughputPingPongRequest', output => 'TestResult', input_stream => false, output_stream => false, opts => []};
 find_rpc_def_BenchmarkRunner('AtomicRegister') -> #{name => 'AtomicRegister', input => 'AtomicRegisterRequest', output => 'TestResult', input_stream => false, output_stream => false, opts => []};
+find_rpc_def_BenchmarkRunner('StreamingWindows') -> #{name => 'StreamingWindows', input => 'StreamingWindowsRequest', output => 'TestResult', input_stream => false, output_stream => false, opts => []};
+find_rpc_def_BenchmarkRunner('Fibonacci') -> #{name => 'Fibonacci', input => 'FibonacciRequest', output => 'TestResult', input_stream => false, output_stream => false, opts => []};
+find_rpc_def_BenchmarkRunner('Chameneos') -> #{name => 'Chameneos', input => 'ChameneosRequest', output => 'TestResult', input_stream => false, output_stream => false, opts => []};
+find_rpc_def_BenchmarkRunner('AllPairsShortestPath') -> #{name => 'AllPairsShortestPath', input => 'APSPRequest', output => 'TestResult', input_stream => false, output_stream => false, opts => []};
+find_rpc_def_BenchmarkRunner('AtomicBroadcast') -> #{name => 'AtomicBroadcast', input => 'AtomicBroadcastRequest', output => 'TestResult', input_stream => false, output_stream => false, opts => []};
 find_rpc_def_BenchmarkRunner('SizedThroughput') -> #{name => 'SizedThroughput', input => 'SizedThroughputRequest', output => 'TestResult', input_stream => false, output_stream => false, opts => []};
 find_rpc_def_BenchmarkRunner(_) -> error.
 
@@ -1989,9 +2753,13 @@ fqbins_to_service_and_rpc_name(<<"kompics.benchmarks.BenchmarkRunner">>, <<"Shut
 fqbins_to_service_and_rpc_name(<<"kompics.benchmarks.BenchmarkRunner">>, <<"PingPong">>) -> {'BenchmarkRunner', 'PingPong'};
 fqbins_to_service_and_rpc_name(<<"kompics.benchmarks.BenchmarkRunner">>, <<"NetPingPong">>) -> {'BenchmarkRunner', 'NetPingPong'};
 fqbins_to_service_and_rpc_name(<<"kompics.benchmarks.BenchmarkRunner">>, <<"ThroughputPingPong">>) -> {'BenchmarkRunner', 'ThroughputPingPong'};
-fqbins_to_service_and_rpc_name(<<"kompics.benchmarks.BenchmarkRunner">>, <<"Fibonacci">>) -> {'BenchmarkRunner', 'Fibonacci'};
 fqbins_to_service_and_rpc_name(<<"kompics.benchmarks.BenchmarkRunner">>, <<"NetThroughputPingPong">>) -> {'BenchmarkRunner', 'NetThroughputPingPong'};
 fqbins_to_service_and_rpc_name(<<"kompics.benchmarks.BenchmarkRunner">>, <<"AtomicRegister">>) -> {'BenchmarkRunner', 'AtomicRegister'};
+fqbins_to_service_and_rpc_name(<<"kompics.benchmarks.BenchmarkRunner">>, <<"StreamingWindows">>) -> {'BenchmarkRunner', 'StreamingWindows'};
+fqbins_to_service_and_rpc_name(<<"kompics.benchmarks.BenchmarkRunner">>, <<"Fibonacci">>) -> {'BenchmarkRunner', 'Fibonacci'};
+fqbins_to_service_and_rpc_name(<<"kompics.benchmarks.BenchmarkRunner">>, <<"Chameneos">>) -> {'BenchmarkRunner', 'Chameneos'};
+fqbins_to_service_and_rpc_name(<<"kompics.benchmarks.BenchmarkRunner">>, <<"AllPairsShortestPath">>) -> {'BenchmarkRunner', 'AllPairsShortestPath'};
+fqbins_to_service_and_rpc_name(<<"kompics.benchmarks.BenchmarkRunner">>, <<"AtomicBroadcast">>) -> {'BenchmarkRunner', 'AtomicBroadcast'};
 fqbins_to_service_and_rpc_name(<<"kompics.benchmarks.BenchmarkRunner">>, <<"SizedThroughput">>) -> {'BenchmarkRunner', 'SizedThroughput'};
 fqbins_to_service_and_rpc_name(S, R) -> error({gpb_error, {badservice_or_rpc, {S, R}}}).
 
@@ -2004,9 +2772,13 @@ service_and_rpc_name_to_fqbins('BenchmarkRunner', 'Shutdown') -> {<<"kompics.ben
 service_and_rpc_name_to_fqbins('BenchmarkRunner', 'PingPong') -> {<<"kompics.benchmarks.BenchmarkRunner">>, <<"PingPong">>};
 service_and_rpc_name_to_fqbins('BenchmarkRunner', 'NetPingPong') -> {<<"kompics.benchmarks.BenchmarkRunner">>, <<"NetPingPong">>};
 service_and_rpc_name_to_fqbins('BenchmarkRunner', 'ThroughputPingPong') -> {<<"kompics.benchmarks.BenchmarkRunner">>, <<"ThroughputPingPong">>};
-service_and_rpc_name_to_fqbins('BenchmarkRunner', 'Fibonacci') -> {<<"kompics.benchmarks.BenchmarkRunner">>, <<"Fibonacci">>};
 service_and_rpc_name_to_fqbins('BenchmarkRunner', 'NetThroughputPingPong') -> {<<"kompics.benchmarks.BenchmarkRunner">>, <<"NetThroughputPingPong">>};
 service_and_rpc_name_to_fqbins('BenchmarkRunner', 'AtomicRegister') -> {<<"kompics.benchmarks.BenchmarkRunner">>, <<"AtomicRegister">>};
+service_and_rpc_name_to_fqbins('BenchmarkRunner', 'StreamingWindows') -> {<<"kompics.benchmarks.BenchmarkRunner">>, <<"StreamingWindows">>};
+service_and_rpc_name_to_fqbins('BenchmarkRunner', 'Fibonacci') -> {<<"kompics.benchmarks.BenchmarkRunner">>, <<"Fibonacci">>};
+service_and_rpc_name_to_fqbins('BenchmarkRunner', 'Chameneos') -> {<<"kompics.benchmarks.BenchmarkRunner">>, <<"Chameneos">>};
+service_and_rpc_name_to_fqbins('BenchmarkRunner', 'AllPairsShortestPath') -> {<<"kompics.benchmarks.BenchmarkRunner">>, <<"AllPairsShortestPath">>};
+service_and_rpc_name_to_fqbins('BenchmarkRunner', 'AtomicBroadcast') -> {<<"kompics.benchmarks.BenchmarkRunner">>, <<"AtomicBroadcast">>};
 service_and_rpc_name_to_fqbins('BenchmarkRunner', 'SizedThroughput') -> {<<"kompics.benchmarks.BenchmarkRunner">>, <<"SizedThroughput">>};
 service_and_rpc_name_to_fqbins(S, R) -> error({gpb_error, {badservice_or_rpc, {S, R}}}).
 
@@ -2014,8 +2786,12 @@ service_and_rpc_name_to_fqbins(S, R) -> error({gpb_error, {badservice_or_rpc, {S
 fqbin_to_msg_name(<<"kompics.benchmarks.PingPongRequest">>) -> 'PingPongRequest';
 fqbin_to_msg_name(<<"kompics.benchmarks.ThroughputPingPongRequest">>) -> 'ThroughputPingPongRequest';
 fqbin_to_msg_name(<<"kompics.benchmarks.AtomicRegisterRequest">>) -> 'AtomicRegisterRequest';
+fqbin_to_msg_name(<<"kompics.benchmarks.StreamingWindowsRequest">>) -> 'StreamingWindowsRequest';
 fqbin_to_msg_name(<<"kompics.benchmarks.SizedThroughputRequest">>) -> 'SizedThroughputRequest';
 fqbin_to_msg_name(<<"kompics.benchmarks.FibonacciRequest">>) -> 'FibonacciRequest';
+fqbin_to_msg_name(<<"kompics.benchmarks.ChameneosRequest">>) -> 'ChameneosRequest';
+fqbin_to_msg_name(<<"kompics.benchmarks.APSPRequest">>) -> 'APSPRequest';
+fqbin_to_msg_name(<<"kompics.benchmarks.AtomicBroadcastRequest">>) -> 'AtomicBroadcastRequest';
 fqbin_to_msg_name(<<"kompics.benchmarks.TestResult">>) -> 'TestResult';
 fqbin_to_msg_name(<<"kompics.benchmarks.TestSuccess">>) -> 'TestSuccess';
 fqbin_to_msg_name(<<"kompics.benchmarks.TestFailure">>) -> 'TestFailure';
@@ -2030,8 +2806,12 @@ fqbin_to_msg_name(E) -> error({gpb_error, {badmsg, E}}).
 msg_name_to_fqbin('PingPongRequest') -> <<"kompics.benchmarks.PingPongRequest">>;
 msg_name_to_fqbin('ThroughputPingPongRequest') -> <<"kompics.benchmarks.ThroughputPingPongRequest">>;
 msg_name_to_fqbin('AtomicRegisterRequest') -> <<"kompics.benchmarks.AtomicRegisterRequest">>;
+msg_name_to_fqbin('StreamingWindowsRequest') -> <<"kompics.benchmarks.StreamingWindowsRequest">>;
 msg_name_to_fqbin('SizedThroughputRequest') -> <<"kompics.benchmarks.SizedThroughputRequest">>;
 msg_name_to_fqbin('FibonacciRequest') -> <<"kompics.benchmarks.FibonacciRequest">>;
+msg_name_to_fqbin('ChameneosRequest') -> <<"kompics.benchmarks.ChameneosRequest">>;
+msg_name_to_fqbin('APSPRequest') -> <<"kompics.benchmarks.APSPRequest">>;
+msg_name_to_fqbin('AtomicBroadcastRequest') -> <<"kompics.benchmarks.AtomicBroadcastRequest">>;
 msg_name_to_fqbin('TestResult') -> <<"kompics.benchmarks.TestResult">>;
 msg_name_to_fqbin('TestSuccess') -> <<"kompics.benchmarks.TestSuccess">>;
 msg_name_to_fqbin('TestFailure') -> <<"kompics.benchmarks.TestFailure">>;
@@ -2078,7 +2858,7 @@ get_all_source_basenames() -> ["benchmarks.proto", "messages.proto"].
 get_all_proto_names() -> ["benchmarks", "messages"].
 
 
-get_msg_containment("benchmarks") -> ['AtomicRegisterRequest', 'FibonacciRequest', 'PingPongRequest', 'SizedThroughputRequest', 'ThroughputPingPongRequest'];
+get_msg_containment("benchmarks") -> ['APSPRequest', 'AtomicBroadcastRequest', 'AtomicRegisterRequest', 'ChameneosRequest', 'FibonacciRequest', 'PingPongRequest', 'SizedThroughputRequest', 'StreamingWindowsRequest', 'ThroughputPingPongRequest'];
 get_msg_containment("messages") -> ['NotImplemented', 'ReadyRequest', 'ReadyResponse', 'ShutdownAck', 'ShutdownRequest', 'TestFailure', 'TestResult', 'TestSuccess'];
 get_msg_containment(P) -> error({gpb_error, {badproto, P}}).
 
@@ -2099,9 +2879,13 @@ get_rpc_containment("benchmarks") ->
      {'BenchmarkRunner', 'PingPong'},
      {'BenchmarkRunner', 'NetPingPong'},
      {'BenchmarkRunner', 'ThroughputPingPong'},
-     {'BenchmarkRunner', 'Fibonacci'},
      {'BenchmarkRunner', 'NetThroughputPingPong'},
      {'BenchmarkRunner', 'AtomicRegister'},
+     {'BenchmarkRunner', 'StreamingWindows'},
+     {'BenchmarkRunner', 'Fibonacci'},
+     {'BenchmarkRunner', 'Chameneos'},
+     {'BenchmarkRunner', 'AllPairsShortestPath'},
+     {'BenchmarkRunner', 'AtomicBroadcast'},
      {'BenchmarkRunner', 'SizedThroughput'}];
 get_rpc_containment("messages") -> [];
 get_rpc_containment(P) -> error({gpb_error, {badproto, P}}).
@@ -2118,10 +2902,14 @@ get_proto_by_msg_name_as_fqbin(<<"kompics.benchmarks.ShutdownRequest">>) -> "mes
 get_proto_by_msg_name_as_fqbin(<<"kompics.benchmarks.ReadyRequest">>) -> "messages";
 get_proto_by_msg_name_as_fqbin(<<"kompics.benchmarks.NotImplemented">>) -> "messages";
 get_proto_by_msg_name_as_fqbin(<<"kompics.benchmarks.ThroughputPingPongRequest">>) -> "benchmarks";
+get_proto_by_msg_name_as_fqbin(<<"kompics.benchmarks.StreamingWindowsRequest">>) -> "benchmarks";
 get_proto_by_msg_name_as_fqbin(<<"kompics.benchmarks.SizedThroughputRequest">>) -> "benchmarks";
 get_proto_by_msg_name_as_fqbin(<<"kompics.benchmarks.PingPongRequest">>) -> "benchmarks";
 get_proto_by_msg_name_as_fqbin(<<"kompics.benchmarks.FibonacciRequest">>) -> "benchmarks";
+get_proto_by_msg_name_as_fqbin(<<"kompics.benchmarks.ChameneosRequest">>) -> "benchmarks";
 get_proto_by_msg_name_as_fqbin(<<"kompics.benchmarks.AtomicRegisterRequest">>) -> "benchmarks";
+get_proto_by_msg_name_as_fqbin(<<"kompics.benchmarks.AtomicBroadcastRequest">>) -> "benchmarks";
+get_proto_by_msg_name_as_fqbin(<<"kompics.benchmarks.APSPRequest">>) -> "benchmarks";
 get_proto_by_msg_name_as_fqbin(<<"kompics.benchmarks.TestFailure">>) -> "messages";
 get_proto_by_msg_name_as_fqbin(<<"kompics.benchmarks.ReadyResponse">>) -> "messages";
 get_proto_by_msg_name_as_fqbin(<<"kompics.benchmarks.ShutdownAck">>) -> "messages";

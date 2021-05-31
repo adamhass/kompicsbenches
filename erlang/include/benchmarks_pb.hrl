@@ -34,6 +34,17 @@
         }).
 -endif.
 
+-ifndef('STREAMINGWINDOWSREQUEST_PB_H').
+-define('STREAMINGWINDOWSREQUEST_PB_H', true).
+-record('StreamingWindowsRequest',
+        {number_of_partitions = 0 :: non_neg_integer() | undefined, % = 1, optional, 32 bits
+         batch_size = 0         :: non_neg_integer() | undefined, % = 2, optional, 64 bits
+         window_size = []       :: iodata() | undefined, % = 3, optional
+         number_of_windows = 0  :: non_neg_integer() | undefined, % = 4, optional, 64 bits
+         window_size_amplification = 0 :: non_neg_integer() | undefined % = 5, optional, 64 bits
+        }).
+-endif.
+
 -ifndef('SIZEDTHROUGHPUTREQUEST_PB_H').
 -define('SIZEDTHROUGHPUTREQUEST_PB_H', true).
 -record('SizedThroughputRequest',
@@ -48,6 +59,34 @@
 -define('FIBONACCIREQUEST_PB_H', true).
 -record('FibonacciRequest',
         {fib_number = 0         :: non_neg_integer() | undefined % = 1, optional, 32 bits
+        }).
+-endif.
+
+-ifndef('CHAMENEOSREQUEST_PB_H').
+-define('CHAMENEOSREQUEST_PB_H', true).
+-record('ChameneosRequest',
+        {number_of_chameneos = 0 :: non_neg_integer() | undefined, % = 1, optional, 32 bits
+         number_of_meetings = 0 :: non_neg_integer() | undefined % = 2, optional, 64 bits
+        }).
+-endif.
+
+-ifndef('APSPREQUEST_PB_H').
+-define('APSPREQUEST_PB_H', true).
+-record('APSPRequest',
+        {number_of_nodes = 0    :: non_neg_integer() | undefined, % = 1, optional, 32 bits
+         block_size = 0         :: non_neg_integer() | undefined % = 2, optional, 32 bits
+        }).
+-endif.
+
+-ifndef('ATOMICBROADCASTREQUEST_PB_H').
+-define('ATOMICBROADCASTREQUEST_PB_H', true).
+-record('AtomicBroadcastRequest',
+        {algorithm = []         :: iodata() | undefined, % = 1, optional
+         number_of_nodes = 0    :: non_neg_integer() | undefined, % = 2, optional, 64 bits
+         number_of_proposals = 0 :: non_neg_integer() | undefined, % = 3, optional, 64 bits
+         concurrent_proposals = 0 :: non_neg_integer() | undefined, % = 4, optional, 64 bits
+         reconfiguration = []   :: iodata() | undefined, % = 5, optional
+         reconfig_policy = []   :: iodata() | undefined % = 6, optional
         }).
 -endif.
 
