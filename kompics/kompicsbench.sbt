@@ -43,7 +43,7 @@ lazy val shared = (project in file("shared"))
     commonSettings,
     name := "Kompics Benchmark Suite (Shared)",
     libraryDependencies ++= Seq(
-      "se.kth.benchmarks" %% "benchmark-suite-shared" % "1.0.0-SNAPSHOT" excludeAll (
+      "se.kth.benchmarks" %% "benchmark-suite-shared" % "1.0.1-SNAPSHOT" excludeAll (
         ExclusionRule(organization = "io.netty")
         ),
       "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.0",
