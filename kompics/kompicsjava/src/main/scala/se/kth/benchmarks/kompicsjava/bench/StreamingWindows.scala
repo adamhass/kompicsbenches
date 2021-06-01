@@ -135,7 +135,10 @@ object StreamingWindows extends DistributedBenchmark {
         Await.ready(Future.sequence(stopFutures), RESOLVE_TIMEOUT);
         this.sinks = Nil;
         logger.trace(s"Flushing remaining messages on the channels waiting for ${resetFutures.length} sources");
-        Await.ready(Future.sequence(resetFutures), FLUSH_TIMEOUT);
+        resetFutures.foreach {
+          f => Await.ready(f, FLUSH_TIMEOUT)
+        }
+        //Await.ready(Future.sequence(resetFutures), FLUSH_TIMEOUT);
         logger.trace("Remaining messages are flushed out.");
       }
       if (lastIteration) {
