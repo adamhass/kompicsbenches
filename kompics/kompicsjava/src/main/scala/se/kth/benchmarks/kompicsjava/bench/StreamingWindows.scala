@@ -131,17 +131,13 @@ object StreamingWindows extends DistributedBenchmark {
               scala.compat.java8.FutureConverters.toScala(cd.reset())
             }
         };
-
-        this.sinks = Nil;
-        logger.trace(s"Flushing remaining messages on the channels waiting for ${resetFutures.length} sources");
-        resetFutures.foreach {
-          f => Await.ready(f, FLUSH_TIMEOUT)
-        }
+        logger.trace("Flushing remaining messages on the channels");
+        Await.ready(Future.sequence(resetFutures), FLUSH_TIMEOUT);
 
         val stopFutures = this.sinks.map { case (_, sink) => this.system.killNotify(sink) };
         Await.ready(Future.sequence(stopFutures), RESOLVE_TIMEOUT);
+        this.sinks = Nil;
 
-        //Await.ready(Future.sequence(resetFutures), FLUSH_TIMEOUT);
         logger.trace("Remaining messages are flushed out.");
       }
       if (lastIteration) {

@@ -7,7 +7,7 @@
     </encoder>
   </appender>
 
-  <logger name="se.kth.benchmarks.kompicsjava.bench" level="TRACE"/>
+  <logger name="se.kth.benchmarks.kompicsjava.bench" level="INFO"/>
 
   <root level="WARN">
     <appender-ref ref="STDOUT" />

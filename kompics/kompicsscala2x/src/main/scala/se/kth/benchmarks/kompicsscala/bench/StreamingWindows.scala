@@ -133,11 +133,12 @@ object StreamingWindows extends DistributedBenchmark {
               cd.reset()
             }
         };
+        logger.trace("Flushing remaining messages on the channels");
+        Await.ready(Future.sequence(resetFutures), FLUSH_TIMEOUT);
+
         val stopFutures = this.sinks.map { case (_, sink) => this.system.killNotify(sink) };
         Await.ready(Future.sequence(stopFutures), RESOLVE_TIMEOUT);
         this.sinks = Nil;
-        logger.trace("Flushing remaining messages on the channels");
-        Await.ready(Future.sequence(resetFutures), FLUSH_TIMEOUT);
         logger.trace("Remaining messages are flushed out.");
       }
       if (lastIteration) {
