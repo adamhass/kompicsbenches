@@ -150,7 +150,7 @@ object Benchmarks extends ParameterDescriptionImplicits {
       stub.streamingWindows(request)
     },
     space = ParameterSpacePB
-      .cross(List(1, 2, 4, 8, 16, 24, 32, 48), List(100), List(0.01, 1.0, 100.0), List(10))
+      .cross(List(1, 2, 4, 8, 16, 24, 32, 48), List(100), List(0.01, 1.0, 10.0), List(10))
       .msg[StreamingWindowsRequest] {
         case (np, bs, ws, nw) => {
           val windowAmp = (ws / windowDataSize).round;
