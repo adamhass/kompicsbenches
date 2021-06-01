@@ -22,12 +22,17 @@ lazy val commonSettings = Seq(
     "-Xlint:deprecation"
   ),
   test in assembly := {},
+/*  assembly / assemblyShadeRules := Seq(
+    ShadeRule.rename("io.netty.netty-all.**" -> "shadeio.n-all.@1")
+      .inLibrary("se.kth.benchmarks" %% "benchmark-suite-shared" % "1.0.1-SNAPSHOT")
+      .inAll
+  ),*/
   assemblyMergeStrategy in assembly := {
     case "META-INF/io.netty.versions.properties" => MergeStrategy.first
     case x =>
       val oldStrategy = (assemblyMergeStrategy in assembly).value
       oldStrategy(x)
-  }
+  },
 );
 
 lazy val root = (project in file("."))

@@ -8,7 +8,7 @@ import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 import io.grpc.{Server, ServerBuilder}
 import com.typesafe.scalalogging.StrictLogging
-import io.grpc.netty.NettyServerBuilder
+import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder
 
 import java.util.concurrent.Executors
 

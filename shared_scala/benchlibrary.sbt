@@ -12,7 +12,7 @@ PB.protoSources in Compile := Seq(baseDirectory.value / "../proto/")
 
 libraryDependencies ++= Seq(
   //"com.thesamet.scalapb" %% "compilerplugin" % "0.7.4",
-  "io.grpc" % "grpc-netty" % scalapb.compiler.Version.grpcJavaVersion,
+  "io.grpc" % "grpc-netty-shaded" % scalapb.compiler.Version.grpcJavaVersion,
   "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion,
   "com.typesafe.scala-logging" %% "scala-logging" % "3.+",
   "com.github.hipjim" %% "scala-retry" % "0.3.0",
