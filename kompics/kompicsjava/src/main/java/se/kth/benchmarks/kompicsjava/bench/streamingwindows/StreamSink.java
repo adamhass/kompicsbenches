@@ -42,7 +42,7 @@ public class StreamSink extends ComponentDefinition {
 
         @Override
         public void handle(Start event) {
-            logger.debug("Got Start!");
+            logger.info("Got Start!");
             sendUpstream(new WindowerMessage.Start(partitionId));
         }
     };

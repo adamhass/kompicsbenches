@@ -101,7 +101,7 @@ object StreamingWindows extends DistributedBenchmark {
       WindowerConfig(numberOfPartitions, windowSize, batchSize, windowSizeAmplification, netAddr)
     }
     override def prepareIteration(d: List[ClientData]): Unit = {
-      logger.trace("Preparing iteration");
+      logger.info("Preparing iteration");
 
       val client = d.head;
       val windowerAddr = client.addr;
