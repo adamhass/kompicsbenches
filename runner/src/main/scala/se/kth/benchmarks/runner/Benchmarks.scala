@@ -127,7 +127,7 @@ object Benchmarks extends ParameterDescriptionImplicits {
       stub.sizedThroughput(request)
     },
     space = ParameterSpacePB
-      .cross(List(10, 100, 1000, 10000), List(100), List(100), List(1, 2, 4, 8, 16, 32, 64))
+      .cross(List(10, 100, 1000), List(100), List(100), List(1, 2, 4, 8, 16))
       .msg[SizedThroughputRequest] {
         case (msize, bsize, bcount, pairs) =>
           SizedThroughputRequest(messageSize = msize, batchSize = bsize, numberOfBatches = bcount, numberOfPairs = pairs)
