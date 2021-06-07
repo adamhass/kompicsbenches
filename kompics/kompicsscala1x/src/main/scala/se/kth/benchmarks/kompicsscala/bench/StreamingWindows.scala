@@ -130,6 +130,7 @@ object StreamingWindows extends DistributedBenchmark {
           case (_, source) =>
             this.system.runOnComponent(source) { component =>
               val cd = component.getComponent().asInstanceOf[StreamSource];
+              logger.trace("Resetting source");
               cd.reset()
             }
         };
@@ -399,7 +400,7 @@ object StreamingWindows extends DistributedBenchmark {
     loopbck uponEvent {
       case Reset(replyTo) =>
         handle {
-          log.debug("Got Reset");
+          log.debug(s"Got Reset replyOnFlushed = ${replyTo.isCompleted}");
           this.flushing = true;
           this.replyOnFlushed = Some(replyTo);
           sendDownstream(Flush(this.partitionId));
