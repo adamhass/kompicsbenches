@@ -136,8 +136,9 @@ object StreamingWindows extends DistributedBenchmark {
         };
         logger.trace("Flushing remaining messages on the channels");
         for (f <- resetFutures) {
-          Await.ready(f, FLUSH_TIMEOUT)
-          logger.trace(s"Flushed f = ${f.value}")
+          val r = Await.result(f, FLUSH_TIMEOUT)
+          val rr = Await.result(r, FLUSH_TIMEOUT)
+          logger.trace(s"Flushed rr = ${rr}")
         }
         // Await.ready(Future.sequence(resetFutures), FLUSH_TIMEOUT);
 
