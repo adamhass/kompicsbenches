@@ -135,12 +135,10 @@ object StreamingWindows extends DistributedBenchmark {
             }
         };
         logger.trace("Flushing remaining messages on the channels");
-        for (f <- resetFutures) {
-          val r = Await.result(f, FLUSH_TIMEOUT)
-          val rr = Await.result(r, FLUSH_TIMEOUT)
-          logger.trace(s"Flushed rr = ${rr}")
-        }
         // Await.ready(Future.sequence(resetFutures), FLUSH_TIMEOUT);
+        for (f <- resetFutures) {
+          Await.result(Await.result(f, FLUSH_TIMEOUT), FLUSH_TIMEOUT)
+        }
 
         val stopFutures = this.sinks.map { case (_, sink) => this.system.killNotify(sink) };
         Await.ready(Future.sequence(stopFutures), RESOLVE_TIMEOUT);
