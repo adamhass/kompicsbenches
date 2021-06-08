@@ -77,7 +77,6 @@ class PartitioningActor(prepare_latch: CountDownLatch,
     }
 
     case InitAck(init_id) => {
-      log.debug("InitAck")
       init_ack_count += 1
       if (init_ack_count == n) {
         prepare_latch.countDown()
@@ -85,18 +84,17 @@ class PartitioningActor(prepare_latch: CountDownLatch,
     }
 
     case Run => {
-      log.debug("Run")
       resolved_active_nodes.foreach(ref => ref ! Run)
     }
     case Done => {
-      log.debug("Done")
+      log.debug("Got Done!")
       done_count += 1
       if (done_count == n) {
+        log.debug("Done!!!")
         finished_latch.get.countDown()
       }
     }
     case TestDone(timestamps) => {
-      log.debug("TestDone")
       done_count += 1
       test_results ++= timestamps
       if (done_count == n) test_promise.get.success(test_results.toList)
