@@ -39,6 +39,7 @@ class PartitioningActor(prepare_latch: CountDownLatch,
 
   override def receive: Receive = {
     case Start => {
+      log.debug("Received Start")
       val actorRefsF =
         Future.sequence(active_nodes.map(node => context.actorSelection(node.actorPath).resolveOne(6 seconds)))
       actorRefsF.onComplete {
@@ -59,13 +60,14 @@ class PartitioningActor(prepare_latch: CountDownLatch,
         } catch {
           case _ => {
             val a_path = context.actorSelection(node.actorPath)
-            logger.info(s"Could not resolve ActorRef. Sending INIT to ActorPath instead: $a_path")
+            log.info(s"Could not resolve ActorRef. Sending INIT to ActorPath instead: $a_path")
             a_path ! INIT(rank, init_id, active_nodes, min_key, max_key)
           }
         }*/
     }
 
     case ResolvedNodes(resolvedRefs) => {
+      log.debug("Resolved Nodes")
       val min_key: Long = 0L
       val max_key: Long = num_keys - 1
       resolved_active_nodes = resolvedRefs
@@ -75,6 +77,7 @@ class PartitioningActor(prepare_latch: CountDownLatch,
     }
 
     case InitAck(init_id) => {
+      log.debug("InitAck")
       init_ack_count += 1
       if (init_ack_count == n) {
         prepare_latch.countDown()
@@ -82,15 +85,18 @@ class PartitioningActor(prepare_latch: CountDownLatch,
     }
 
     case Run => {
+      log.debug("Run")
       resolved_active_nodes.foreach(ref => ref ! Run)
     }
     case Done => {
+      log.debug("Done")
       done_count += 1
       if (done_count == n) {
         finished_latch.get.countDown()
       }
     }
     case TestDone(timestamps) => {
+      log.debug("TestDone")
       done_count += 1
       test_results ++= timestamps
       if (done_count == n) test_promise.get.success(test_results.toList)

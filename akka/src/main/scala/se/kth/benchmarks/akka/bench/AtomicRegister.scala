@@ -325,6 +325,7 @@ object AtomicRegister extends DistributedBenchmark with StrictLogging {
     override def receive = {
 
       case Identify => {
+        logger.debug("Received Identify")
         nodes_listBuffer += sender()
         if (nodes_listBuffer.size == n) {
           master ! InitAck(current_run_id)
@@ -334,20 +335,24 @@ object AtomicRegister extends DistributedBenchmark with StrictLogging {
       }
 
       case i: Init => {
+        logger.debug("Received Init")
         newIteration(i)
         master = sender()
       }
 
       case Run => {
+        logger.debug("Received Run")
         invokeOperations()
       }
 
       case Read(current_run_id, key, readId) => {
+        logger.debug("Received Read")
         val current_state: AtomicRegisterState = register_state(key)
         sender() ! Value(current_run_id, key, readId, current_state.ts, current_state.wr, current_state.value)
       }
 
       case v: Value => {
+        logger.debug("Received Value")
         if (v.run_id == current_run_id) {
           val current_register = register_state(v.key)
           if (v.rid == current_register.rid) {
@@ -386,6 +391,7 @@ object AtomicRegister extends DistributedBenchmark with StrictLogging {
       }
 
       case w: Write => {
+        logger.debug("Received Write")
         if (w.run_id == current_run_id) {
           val current_state = register_state(w.key)
           if ((w.ts, w.wr) > (current_state.ts, current_state.wr)) {
@@ -398,6 +404,7 @@ object AtomicRegister extends DistributedBenchmark with StrictLogging {
       }
 
       case a: Ack => {
+        logger.debug("Received Ack")
         if (a.run_id == current_run_id) {
           val current_register = register_state(a.key)
           if (a.rid == current_register.rid) {
