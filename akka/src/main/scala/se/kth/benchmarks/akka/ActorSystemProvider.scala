@@ -116,7 +116,13 @@ object ActorSystemProvider extends StrictLogging {
       loggers = ["akka.event.slf4j.Slf4jLogger"]
       loglevel = "WARNING"
       logging-filter = "akka.event.slf4j.Slf4jLoggingFilter"
-
+      remote {
+        artery {
+          advanced {
+            outbound-message-queue-size = 80000
+          }
+        }
+      }
       actor {
         creation-timeout = 6000s
         default-dispatcher {
