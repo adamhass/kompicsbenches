@@ -40,6 +40,8 @@ abstract class ExperimentPlots[Params <: Parameters.Message[Params]](val bench: 
         val pimpedSeries: List[Series] = sortedSeries.map( series => {
           series.addMeta("tooltip" -> JsRaw(s"{valueDecimals: 2, valueSuffix: '${units}'}"))
           .addMeta(  "color" -> JsRaw(FrameworkPlotStyle.getColor(series.getName)))
+            .addMeta(  "marker" -> JsRaw(s"{${FrameworkPlotStyle.getMarker(series.getName)}}"))
+            .addMeta("dashStyle" -> JsRaw(FrameworkPlotStyle.getDashStyle(series.getName)))
         }
         );
         val paramsS = paramSeries.map(_.toString);
@@ -62,6 +64,8 @@ abstract class ExperimentPlots[Params <: Parameters.Message[Params]](val bench: 
         val pimpedCalculatedSeries: List[Series] = sortedCalculatedSeries.map(series => {
           series.addMeta("tooltip" -> JsRaw(s"{valueDecimals: 2, valueSuffix: '${calculatedUnits}'}"))
           .addMeta(  "color" -> JsRaw(FrameworkPlotStyle.getColor(series.getName)))
+            .addMeta(  "marker" -> JsRaw(s"{${FrameworkPlotStyle.getMarker(series.getName)}}"))
+            .addMeta("dashStyle" -> JsRaw(FrameworkPlotStyle.getDashStyle(series.getName)))
         }
         );
         val calculatedPlotId = s"${corePlotId}-calculated";
@@ -103,6 +107,8 @@ abstract class ExperimentPlots[Params <: Parameters.Message[Params]](val bench: 
         val pimpedSeries: List[Series] = sortedSeries.map( series => {
           series.addMeta("tooltip" -> JsRaw(s"{valueDecimals: 2, valueSuffix: '${units}'}"))
             .addMeta(  "color" -> JsRaw(FrameworkPlotStyle.getColor(series.getName)))
+            .addMeta(  "marker" -> JsRaw(s"{${FrameworkPlotStyle.getMarker(series.getName)}}"))
+            .addMeta("dashStyle" -> JsRaw(FrameworkPlotStyle.getDashStyle(series.getName)))
         }
         );
         val paramsS = paramSeries.map(_.toString);
@@ -158,6 +164,8 @@ abstract class ExperimentPlots[Params <: Parameters.Message[Params]](val bench: 
         val pimpedSeries: List[Series] = sortedSeries.map( series => {
           series.addMeta("tooltip" -> JsRaw(s"{valueDecimals: 2, valueSuffix: '${units}'}"))
             .addMeta(  "color" -> JsRaw(FrameworkPlotStyle.getColor(series.getName)))
+            .addMeta(  "marker" -> JsRaw(s"{${FrameworkPlotStyle.getMarker(series.getName)}}"))
+            .addMeta("dashStyle" -> JsRaw(FrameworkPlotStyle.getDashStyle(series.getName)))
         }
         );
         val paramsS = paramSeries.map(_.toString);
@@ -180,6 +188,8 @@ abstract class ExperimentPlots[Params <: Parameters.Message[Params]](val bench: 
         val pimpedCalculatedSeries: List[Series] = sortedCalculatedSeries.map(series => {
           series.addMeta("tooltip" -> JsRaw(s"{valueDecimals: 2, valueSuffix: '${calculatedUnits}'}"))
             .addMeta(  "color" -> JsRaw(FrameworkPlotStyle.getColor(series.getName)))
+            .addMeta(  "marker" -> JsRaw(s"{${FrameworkPlotStyle.getMarker(series.getName)}}"))
+            .addMeta("dashStyle" -> JsRaw(FrameworkPlotStyle.getDashStyle(series.getName)))
         }
         );
         val calculatedPlotId = s"${corePlotId}-calculated";

@@ -22,6 +22,8 @@ object Fibonacci {
     val pimpedSeries: List[Series] = sortedSeries.map( series => {
       series.addMeta("tooltip" -> JsRaw(s"{valueDecimals: 2, valueSuffix: 'ms'}"))
         .addMeta(  "color" -> JsRaw(FrameworkPlotStyle.getColor(series.getName)))
+        .addMeta(  "marker" -> JsRaw(s"{${FrameworkPlotStyle.getMarker(series.getName)}}"))
+        .addMeta("dashStyle" -> JsRaw(FrameworkPlotStyle.getDashStyle(series.getName)))
     }
     );
     val paramsS = params.map(_.toString);
